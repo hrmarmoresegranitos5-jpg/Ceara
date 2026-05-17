@@ -101,7 +101,8 @@ function drawArc(svg, pvX, oy, pw, ph, side) {
 
 // ── RENDERIZADOR PRINCIPAL ────────────────────────────────────
 function renderCAD(svgEl, state) {
-  const { tipo, larg, alt, folhas, fixoLarg, fixoLado, bandH, temFixo, temBandeirola, pivFolhas, kitPivotante } = state;
+  const { tipo, larg, alt, folhas, fixoLarg, fixoLado, bandH, temFixo, temBandeirola, pivFolhas, kitPivotante, accs } = state;
+  const _accs = accs || {};
   if (!svgEl || !larg || !alt || isNaN(larg) || isNaN(alt)) return;
   while (svgEl.firstChild) svgEl.removeChild(svgEl.firstChild);
 
@@ -154,20 +155,29 @@ function renderCAD(svgEl, state) {
       drawGlass(svgEl, ox, portaY, hw, ph, gId);
       svgEl.appendChild(svgRect(ox, portaY, hw, ph, {fill:'none',stroke:C.frame,'stroke-width':'2',rx:'2'}));
       drawArc(svgEl, ox, portaY, hw, ph, 'right');
-      drawPuxador(svgEl, ox+hw-5, portaY+ph*0.3, portaY+ph*0.7);
+      if (_accs.puxador) drawPuxador(svgEl, ox+hw-5, portaY+ph*0.3, portaY+ph*0.7);
       // Folha direita
       drawGlass(svgEl, ox+hw, portaY, hw, ph, gId);
       svgEl.appendChild(svgRect(ox+hw, portaY, hw, ph, {fill:'none',stroke:C.frame,'stroke-width':'2',rx:'2'}));
       drawArc(svgEl, ox+hw, portaY, hw, ph, 'left');
-      drawPuxador(svgEl, ox+hw+5, portaY+ph*0.3, portaY+ph*0.7);
+      if (_accs.puxador) drawPuxador(svgEl, ox+hw+5, portaY+ph*0.3, portaY+ph*0.7);
     } else {
       drawGlass(svgEl, ox, portaY, pw, ph, gId);
       svgEl.appendChild(svgRect(ox, portaY, pw, ph, {fill:'none',stroke:C.frame,'stroke-width':'2',rx:'2'}));
       drawArc(svgEl, ox, portaY, pw, ph, 'right');
-      drawPuxador(svgEl, ox+pw-8, portaY+ph*0.35, portaY+ph*0.65);
-      // Mola hidráulica
-      if (kitPivotante === 'mola') {
-        svgEl.appendChild(svgEl2('rect', {x:ox+pw/2-10, y:portaY+ph-6, width:20, height:5, rx:'2', fill:'rgba(255,200,80,0.3)', stroke:'rgba(255,200,80,0.5)','stroke-width':'1'}));
+      // Puxador — só se selecionado
+      if (_accs.puxador) {
+        drawPuxador(svgEl, ox+pw-8, portaY+ph*0.35, portaY+ph*0.65);
+      }
+      // Fixador — ponto no chão do lado oposto ao pivô
+      if (_accs.fixador) {
+        svgEl.appendChild(svgEl2('circle',{cx:ox+pw-5,cy:portaY+ph-5,r:'4',fill:'rgba(255,200,80,0.35)',stroke:'rgba(255,200,80,0.7)','stroke-width':'1.5'}));
+        svgEl.appendChild(svgTxt(ox+pw-5, portaY+ph-14, 'FIX', {'text-anchor':'middle','font-size':'5','font-family':'Outfit,sans-serif','font-weight':'700',fill:'rgba(255,200,80,0.7)'}));
+      }
+      // Mola hidráulica — barra dourada no piso
+      if (state.temMola) {
+        svgEl.appendChild(svgEl2('rect',{x:ox+pw/2-12,y:portaY+ph-5,width:24,height:4,rx:'2',fill:'rgba(255,200,80,0.4)',stroke:'rgba(255,200,80,0.6)','stroke-width':'1.2'}));
+        svgEl.appendChild(svgTxt(ox+pw/2, portaY+ph-8, 'MOLA', {'text-anchor':'middle','font-size':'5','font-family':'Outfit,sans-serif','font-weight':'700',fill:'rgba(255,200,80,0.8)'}));
       }
     }
     // Cota largura porta

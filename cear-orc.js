@@ -10,26 +10,29 @@ function renderOrc(wrap) {
   const accConfig = ACESSORIOS_CONFIG[s.tipo] || [];
   const vidrosDispo = (VIDROS_POR_TIPO[s.tipo]||[]).map(k=>({key:k,...CFG.vidros[k]}));
 
-  // ── Seletor visual de configuração (pivotante) ──
-  const pivConfig = isPiv ? `
-    <div class="piv-config-ttl">Configuração da porta</div>
-    <div class="piv-configs" id="pivConfigs">
-      ${[
-        { id:'1s',   label:'1 folha',          fixo:null,  band:false, folhas:1 },
-        { id:'1sf',  label:'1 + fixo',          fixo:'dir', band:false, folhas:1 },
-        { id:'1sb',  label:'1 + bandeirola',    fixo:null,  band:true,  folhas:1 },
-        { id:'1sfb', label:'1 + fixo + band.',  fixo:'dir', band:true,  folhas:1 },
-        { id:'2s',   label:'2 folhas',          fixo:null,  band:false, folhas:2 },
-        { id:'2sf',  label:'2 + fixo',          fixo:'dir', band:false, folhas:2 },
-      ].map(c => {
-        const cur = (s.pivFolhas===c.folhas && !!s.temFixo===!!c.fixo && !!s.temBandeirola===!!c.band);
-        return `<button class="piv-cfg-btn${cur?' active':''}" onclick="orcSetPivConfig('${c.id}')">
-          <svg id="mcad_${c.id}" class="piv-cfg-cad" viewBox="0 0 60 44" width="60" height="44"></svg>
-          <span class="piv-cfg-lbl">${c.label}</span>
-        </button>`;
-      }).join('')}
-    </div>
-  ` : '';
+  // ── Seletor visual de configuração (pivotante) — usa concatenação para evitar
+  //    problemas com template literals aninhados
+  let pivConfig = '';
+  if (isPiv) {
+    const _cfgs = [
+      { id:'1s',   label:'1 folha',        fixo:false, band:false, folhas:1 },
+      { id:'1sf',  label:'1 + fixo',        fixo:true,  band:false, folhas:1 },
+      { id:'1sb',  label:'1 + bandeirola',  fixo:false, band:true,  folhas:1 },
+      { id:'1sfb', label:'1+fixo+band.',    fixo:true,  band:true,  folhas:1 },
+      { id:'2s',   label:'2 folhas',        fixo:false, band:false, folhas:2 },
+      { id:'2sf',  label:'2 + fixo',        fixo:true,  band:false, folhas:2 },
+    ];
+    let _btns = '';
+    for (const c of _cfgs) {
+      const cur = (s.pivFolhas===c.folhas && !!s.temFixo===c.fixo && !!s.temBandeirola===c.band);
+      _btns += '<button class="piv-cfg-btn' + (cur?' active':'') + '" onclick="orcSetPivConfig(\'' + c.id + '\')">';
+      _btns += '<svg id="mcad_' + c.id + '" class="piv-cfg-cad" viewBox="0 0 60 44" width="60" height="44"></svg>';
+      _btns += '<span class="piv-cfg-lbl">' + c.label + '</span>';
+      _btns += '</button>';
+    }
+    pivConfig = '<div class="piv-config-ttl">Configuração da porta</div>'
+              + '<div class="piv-configs" id="pivConfigs">' + _btns + '</div>';
+  }
 
   // ── Folhas para porta de correr ──
   const folhasBlock = isCorrer ? `
@@ -123,6 +126,24 @@ function renderOrc(wrap) {
     </div>
   ` : '';
 
+
+  // Acessórios visíveis (exclui 'kit' em pivotante, tratado pelo kitBlock)
+  let accsBlock = '';
+  if (!isCorrer) {
+    const visAcc = accConfig.filter(a => !(isPiv && a.id === 'kit'));
+    if (visAcc.length) {
+      let ah = '<div class="section" style="margin-bottom:14px"><div class="section-ttl">Acessórios</div><div class="orc-accs" id="orcAccs">';
+      visAcc.forEach(a => {
+        const ativo = s.accs[a.id] ?? a.obrig;
+        ah += '<button class="orc-acc-btn' + (ativo?' on':'') + (a.obrig?' obrig':'') + '"'
+           + ' onclick="orcToggleAcc(\'' + a.id + '\',' + a.obrig + ')">'
+           + (ativo?'✓':'+') + ' ' + a.nome + (a.preco ? ' (' + formatBRL(a.preco) + ')' : '') + '</button>';
+      });
+      ah += '</div></div>';
+      accsBlock = ah;
+    }
+  }
+
   wrap.innerHTML = `
     <div id="pgOrcamento">
       <div class="orc-tipos" id="orcTipos">
@@ -159,17 +180,7 @@ function renderOrc(wrap) {
         </select>
       </div>
 
-      ${(!isCorrer && accConfig.length>0)?`
-        <div class="section" style="margin-bottom:14px">
-          <div class="section-ttl">Acessórios</div>
-          <div class="orc-accs" id="orcAccs">
-            ${accConfig.map(a=>{
-              const ativo=s.accs[a.id]??a.obrig;
-              return `<button class="orc-acc-btn${ativo?' on':''}${a.obrig?' obrig':''}" onclick="orcToggleAcc('${a.id}',${a.obrig})">${ativo?'✓':'+'} ${a.nome}${a.preco?` (${formatBRL(a.preco)})`:''}</button>`;
-            }).join('')}
-          </div>
-        </div>
-      `:''}
+      ${accsBlock}
 
       <div class="field">
         <label>Distância (km) — frete grátis até ${CFG.comercial.frete_gratis_km} km</label>
@@ -259,6 +270,8 @@ function _orcRefreshCAD() {
     fixoLado:       s.fixoLado    || 'dir',
     temBandeirola:  s.temBandeirola,
     bandH:          s.bandH       || 40,
+    temMola:        s.temMola,
+    accs:           s.accs,
   });
 }
 
