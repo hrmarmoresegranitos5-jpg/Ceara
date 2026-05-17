@@ -106,28 +106,10 @@ function renderOrc(wrap) {
   // ── Kit pivotante + Mola (separados, sem template literals aninhados) ──
   let kitBlock = '';
   if (isPiv) {
-    // SVG do pivô comum (triângulo + linha)
-    const svgComum = '<svg viewBox="0 0 44 44" width="44" height="44" style="display:block;margin:0 auto 4px">'
-      + '<rect x="4" y="4" width="36" height="36" rx="4" fill="none" stroke="rgba(100,200,255,0.2)" stroke-width="1"/>'
-      + '<rect x="18" y="6" width="8" height="32" rx="2" fill="rgba(255,200,80,0.3)" stroke="rgba(255,200,80,0.6)" stroke-width="1.5"/>'
-      + '<circle cx="22" cy="38" r="4" fill="none" stroke="rgba(255,200,80,0.7)" stroke-width="1.5"/>'
-      + '<circle cx="22" cy="6" r="3" fill="rgba(255,200,80,0.5)"/>'
-      + '</svg>';
-    // SVG do pivô jumbo (mais largo/robusto)
-    const svgJumbo = '<svg viewBox="0 0 44 44" width="44" height="44" style="display:block;margin:0 auto 4px">'
-      + '<rect x="4" y="4" width="36" height="36" rx="4" fill="none" stroke="rgba(100,200,255,0.2)" stroke-width="1"/>'
-      + '<rect x="15" y="6" width="14" height="32" rx="3" fill="rgba(255,200,80,0.3)" stroke="rgba(255,200,80,0.6)" stroke-width="1.8"/>'
-      + '<circle cx="22" cy="38" r="5" fill="none" stroke="rgba(255,200,80,0.7)" stroke-width="2"/>'
-      + '<circle cx="22" cy="6" r="4" fill="rgba(255,200,80,0.5)"/>'
-      + '<rect x="13" y="18" width="18" height="8" rx="2" fill="rgba(255,200,80,0.2)" stroke="rgba(255,200,80,0.4)" stroke-width="1"/>'
-      + '</svg>';
-    // SVG da mola (espiral)
-    const svgMola = '<svg viewBox="0 0 44 44" width="44" height="44" style="display:block;margin:0 auto 4px">'
-      + '<rect x="4" y="4" width="36" height="36" rx="4" fill="none" stroke="rgba(100,200,255,0.2)" stroke-width="1"/>'
-      + '<path d="M22,8 Q34,12 22,16 Q10,20 22,24 Q34,28 22,32 Q10,36 22,40" fill="none" stroke="rgba(255,200,80,0.7)" stroke-width="2" stroke-linecap="round"/>'
-      + '<circle cx="22" cy="8" r="2.5" fill="rgba(255,200,80,0.6)"/>'
-      + '<circle cx="22" cy="40" r="2.5" fill="rgba(255,200,80,0.6)"/>'
-      + '</svg>';
+    // Kit buttons: usar SVG containers com IDs, preenchidos após render
+    const svgComum = '<svg id="mkitComum" class="kit-cad" viewBox="0 0 50 50" width="50" height="50"></svg>';
+    const svgJumbo = '<svg id="mkitJumbo" class="kit-cad" viewBox="0 0 50 50" width="50" height="50"></svg>';
+    const svgMola  = '<svg id="mkitMola"  class="kit-cad" viewBox="0 0 50 50" width="50" height="50"></svg>';
 
     // Build kit HTML safely
     function _kitBtn(kitId, svg, nm, sub, desc) {
@@ -153,10 +135,18 @@ function renderOrc(wrap) {
   }
 
 
-  // Acessórios visíveis (exclui 'kit' em pivotante, tratado pelo kitBlock)
+  // Acessórios: para pivotante, mostra só puxador e fixador (kit já está no kitBlock)
   let accsBlock = '';
   if (!isCorrer) {
-    const visAcc = accConfig.filter(a => !(isPiv && a.id === 'kit'));
+    // Pivotante: só puxador e fixador (kit tratado acima, contra fechadura abaixo)
+    const pivAccs = [
+      { id:'puxador', nome:'Puxador',  preco:100, obrig:false },
+      { id:'fixador', nome:'Fixador',  preco:60,  obrig:false },
+    ];
+    if (isPiv && (s.pivFolhas||1) === 2) {
+      pivAccs.push({ id:'contra', nome:'Contra fechadura (2 folhas)', preco:50, obrig:true });
+    }
+    const visAcc = isPiv ? pivAccs : accConfig;
     if (visAcc.length) {
       let ah = '<div class="section" style="margin-bottom:14px"><div class="section-ttl">Acessórios</div><div class="orc-accs" id="orcAccs">';
       visAcc.forEach(a => {
@@ -230,7 +220,7 @@ function renderOrc(wrap) {
   _orcRefreshCAD();
   orcCalcAndRender();
   // Render mini-CADs do seletor pivotante
-  if (isPiv) _renderMiniCADs();
+  if (isPiv) { _renderMiniCADs(); _renderMiniKitCADs(); }
 }
 
 // Configs pivotante
@@ -247,6 +237,7 @@ function orcSetPivConfig(id) {
   const c = PIV_CONFIGS[id];
   if (!c) return;
   orcState.pivFolhas      = c.folhas;
+  orcState.accs           = {}; // reset ao trocar config
   orcState.temFixo        = c.fixo;
   orcState.temBandeirola  = c.band;
   orcState.fixoLado       = c.fixoLado;
