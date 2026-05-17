@@ -2,7 +2,7 @@
 // CAD SVG
 // ════════════════════════════════════════════════════════════
 
-function renderCAD(svgEl, { tipo, larg, alt }) {
+function renderCAD(svgEl, { tipo, larg, alt, folhas }) {
   if (!svgEl || !larg || !alt || isNaN(larg) || isNaN(alt)) return;
   while (svgEl.firstChild) svgEl.removeChild(svgEl.firstChild);
   const W=320,H=200,MARGIN=30,maxPW=W-MARGIN*2-40,maxPH=H-MARGIN*2-30;
@@ -32,9 +32,60 @@ function renderCAD(svgEl, { tipo, larg, alt }) {
     svgEl.appendChild(line(pvX,oy+ph*0.5,ox+pw-8,oy+8,{stroke:'rgba(100,200,255,0.25)','stroke-width':'1','stroke-dasharray':'4,3'}));
     svgEl.appendChild(el('circle',{cx:pvX,cy:oy+ph*0.5,r:'4',fill:'none',stroke:'rgba(255,200,80,0.6)','stroke-width':'1.5'}));
   } else if (tipo==='correr') {
-    const folhas=larg>200?4:2;
-    for(let f=1;f<folhas;f++){const fx=ox+pw*(f/folhas);svgEl.appendChild(line(fx,oy+2,fx,oy+ph-2,{stroke:'rgba(100,200,255,0.5)','stroke-width':'1.5','stroke-dasharray':'2,2'}));}
-    svgEl.appendChild(path(`M${ox+6},${oy+ph/2} L${ox+14},${oy+ph/2-4} L${ox+14},${oy+ph/2+4} Z`,{fill:'rgba(100,200,255,0.4)'}));
+    const nFolhas = Number(folhas) || 2;
+    const nMoveis = CORRER_MOVEIS[nFolhas] ?? 2;
+    const nFixas  = nFolhas - nMoveis;
+    const fw = pw / nFolhas; // largura de cada folha no SVG
+
+    // Para 4 folhas: fixas ficam nas extremidades (posições 0 e 3), móveis no meio (1 e 2)
+    // Para 1 folha: 1 móvel
+    // Para 2 folhas: 2 móveis
+    const fixaIdx = nFixas > 0 ? [0, nFolhas - 1] : [];
+
+    for (let f = 0; f < nFolhas; f++) {
+      const fx = ox + fw * f;
+      const isFixa = fixaIdx.includes(f);
+      const cx = fx + fw / 2;
+
+      // Fundo da folha
+      const folhaRect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      folhaRect.setAttribute('x', fx + 1);
+      folhaRect.setAttribute('y', oy + 1);
+      folhaRect.setAttribute('width', fw - 2);
+      folhaRect.setAttribute('height', ph - 2);
+      folhaRect.setAttribute('fill', isFixa ? 'rgba(100,200,255,0.04)' : 'rgba(100,200,255,0.07)');
+      folhaRect.setAttribute('stroke', isFixa ? 'rgba(100,200,255,0.3)' : 'rgba(100,200,255,0.55)');
+      folhaRect.setAttribute('stroke-width', '1.2');
+      svgEl.appendChild(folhaRect);
+
+      // Linha de divisão entre folhas (exceto depois da última)
+      if (f < nFolhas - 1) {
+        svgEl.appendChild(line(fx + fw, oy + 2, fx + fw, oy + ph - 2, { stroke:'rgba(100,200,255,0.35)', 'stroke-width':'1', 'stroke-dasharray':'3,2' }));
+      }
+
+      if (isFixa) {
+        // Folha fixa: ícone de cadeado ou X no centro
+        svgEl.appendChild(txt(cx, oy + ph/2 - 6, '⊠', { 'text-anchor':'middle', 'font-size':'10', fill:'rgba(100,200,255,0.35)' }));
+        svgEl.appendChild(txt(cx, oy + ph/2 + 10, 'FIXO', { 'text-anchor':'middle', 'font-size':'5.5', fill:'rgba(100,200,255,0.35)', 'font-weight':'700', 'letter-spacing':'0.04em' }));
+      } else {
+        // Folha móvel: seta de movimento
+        const arrowDir = (nFixas > 0 && f >= nFolhas/2) ? 1 : -1; // fixa dir → móvel vai pra esq
+        const ax = cx, ay = oy + ph/2;
+        const al = Math.min(fw * 0.35, 10);
+        svgEl.appendChild(line(ax - al, ay, ax + al, ay, { stroke:'rgba(100,200,255,0.7)', 'stroke-width':'1.5', 'stroke-linecap':'round' }));
+        // seta esquerda
+        svgEl.appendChild(path(`M${ax - al},${ay} L${ax - al + 4},${ay - 3} L${ax - al + 4},${ay + 3} Z`, { fill:'rgba(100,200,255,0.6)' }));
+        // seta direita
+        svgEl.appendChild(path(`M${ax + al},${ay} L${ax + al - 4},${ay - 3} L${ax + al - 4},${ay + 3} Z`, { fill:'rgba(100,200,255,0.6)' }));
+        // puxador
+        const phx = (nFixas > 0 && f < nFolhas/2) ? fx + fw - 4 : fx + 4;
+        svgEl.appendChild(line(phx, oy + ph*0.35, phx, oy + ph*0.65, { stroke:'rgba(212,175,55,0.7)', 'stroke-width':'2.5', 'stroke-linecap':'round' }));
+      }
+    }
+
+    // Trilho superior e inferior
+    svgEl.appendChild(line(ox, oy - 3, ox + pw, oy - 3, { stroke:'rgba(100,200,255,0.5)', 'stroke-width':'2.5', 'stroke-linecap':'round' }));
+    svgEl.appendChild(line(ox, oy + ph + 3, ox + pw, oy + ph + 3, { stroke:'rgba(100,200,255,0.3)', 'stroke-width':'1.5', 'stroke-linecap':'round' }));
   } else if (tipo==='janela') {
     svgEl.appendChild(line(ox+2,oy+ph/2,ox+pw-2,oy+ph/2,{stroke:'rgba(100,200,255,0.45)','stroke-width':'1.2','stroke-dasharray':'2,2'}));
     const fj=larg<=120?2:4; for(let f=1;f<fj;f++){const fjx=ox+pw*(f/fj);svgEl.appendChild(line(fjx,oy+2,fjx,oy+ph-2,{stroke:'rgba(100,200,255,0.45)','stroke-width':'1','stroke-dasharray':'2,2'}));}

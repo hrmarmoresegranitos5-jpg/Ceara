@@ -136,6 +136,17 @@ async function gerarPDFOrcamento(state) {
     const dataNum   = new Date().toLocaleDateString('pt-BR');
     const numOrc    = 'ORC-' + Date.now().toString().slice(-6);
 
+    // Info de folhas para porta de correr
+    const isCorrer = state.tipo === 'correr';
+    const nFolhas  = isCorrer ? (Number(state.folhasCorrer) || 2) : 0;
+    const nMoveis  = isCorrer ? (CORRER_MOVEIS[nFolhas] ?? 2) : 0;
+    const nFixas   = nFolhas - nMoveis;
+    const configCorrer = isCorrer
+      ? (nFixas > 0
+          ? `${nFolhas} folhas (${nMoveis} móve${nMoveis>1?'is':'l'} + ${nFixas} fixa${nFixas>1?'s':''})`
+          : `${nFolhas} folha${nFolhas>1?'s':''} móve${nMoveis>1?'is':'l'}`)
+      : '';
+
     const logoSrc = typeof LOGO_B64 !== 'undefined' ? LOGO_B64 : '';
 
     // ── Renderizar HTML em container oculto ─────────────────
@@ -200,6 +211,7 @@ async function gerarPDFOrcamento(state) {
           <div style="background:linear-gradient(135deg,rgba(201,168,76,0.07),rgba(201,168,76,0.02));border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;gap:22px;flex-wrap:wrap">
             <div><div style="font-size:10px;color:#a08030;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">TIPO</div><div style="font-size:14px;font-weight:700;color:#1a1a2e">${tipoLabel}</div></div>
             <div><div style="font-size:10px;color:#a08030;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">MEDIDAS</div><div style="font-size:14px;font-weight:700;color:#1a1a2e">${state.larg} × ${state.alt} cm</div></div>
+            ${isCorrer ? `<div><div style="font-size:10px;color:#a08030;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">CONFIGURAÇÃO</div><div style="font-size:14px;font-weight:700;color:#1a1a2e">${configCorrer}</div></div>` : ''}
             ${vidroObj ? `<div><div style="font-size:10px;color:#a08030;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">VIDRO</div><div style="font-size:14px;font-weight:700;color:#1a1a2e">${vidroObj.nome}</div></div>` : ''}
           </div>
 

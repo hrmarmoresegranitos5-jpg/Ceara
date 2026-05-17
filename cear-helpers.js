@@ -6,11 +6,63 @@ function formatBRL(v) {
   return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits:2 });
 }
 
-function calcularOrcamento({ tipo, larg, alt, vidro, accs, km }) {
+function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer }) {
   if (!larg || !alt || isNaN(larg) || isNaN(alt)) return null;
   const linhas = []; let total = 0, descontoBase = 0;
   const area = (larg/100)*(alt/100);
   const vidroObj = VIDROS[vidro];
+
+  // ── PORTA DE CORRER — lógica dedicada ──────────────────────
+  if (tipo === 'correr') {
+    const nFolhas  = Number(folhasCorrer) || 2;          // total de folhas
+    const nMoveis  = CORRER_MOVEIS[nFolhas] ?? 2;        // folhas móveis
+    const nFixas   = nFolhas - nMoveis;                  // folhas fixas
+    const largM    = larg / 100;                         // largura em metros
+
+    // Vidro — área total (todas as folhas)
+    if (vidroObj) {
+      const valVidro = area * vidroObj.preco;
+      linhas.push({ nome:`Vidro ${vidroObj.nome} (${nFolhas} folha${nFolhas>1?'s':''})`, valor:valVidro });
+      total += valVidro;
+      if (vidroObj.temperado) descontoBase += valVidro * DESCONTO_AVISTA;
+    }
+
+    // Trilho superior
+    const valTrilhoSup = largM * CORRER_PRECOS.trilho_sup;
+    linhas.push({ nome:`Trilho superior (${larg} cm)`, valor:valTrilhoSup });
+    total += valTrilhoSup;
+
+    // Guia inferior
+    const valGuiaInf = largM * CORRER_PRECOS.guia_inf;
+    linhas.push({ nome:`Guia inferior (${larg} cm)`, valor:valGuiaInf });
+    total += valGuiaInf;
+
+    // Kits de carrinho (por folha móvel)
+    const valKits = nMoveis * CORRER_PRECOS.kit_carrinho;
+    linhas.push({ nome:`Kit carrinho ×${nMoveis} (folha${nMoveis>1?'s móveis':' móvel'})`, valor:valKits });
+    total += valKits;
+
+    // Fechadura (por folha móvel)
+    const valFechadura = nMoveis * CORRER_PRECOS.fechadura;
+    linhas.push({ nome:`Fechadura VP ×${nMoveis}`, valor:valFechadura });
+    total += valFechadura;
+
+    // Puxador (por folha móvel)
+    const valPuxador = nMoveis * CORRER_PRECOS.puxador;
+    linhas.push({ nome:`Puxador ×${nMoveis}`, valor:valPuxador });
+    total += valPuxador;
+
+    // Frete
+    const kmNum = parseFloat(km) || 0;
+    let frete = 0;
+    if (kmNum > FRETE_GRATIS_KM) frete = (kmNum - FRETE_GRATIS_KM) * FRETE_POR_KM_EXTRA;
+    linhas.push({ nome:`Frete (${kmNum} km)`, valor:frete });
+    total += frete;
+
+    return { linhas, total, totalAvista: total - descontoBase, nFolhas, nMoveis, nFixas };
+  }
+
+  // ── DEMAIS TIPOS ────────────────────────────────────────────
   if (vidroObj) {
     const val = area * vidroObj.preco;
     linhas.push({ nome:vidroObj.nome, valor:val });
@@ -23,7 +75,6 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km }) {
     let val = 0;
     if (a.preco !== null && a.preco !== undefined) { val = a.preco; }
     else {
-      if (tipo === 'correr')  val = area * 100;
       if (tipo === 'janela')  val = (larg/100) * 100;
       if (tipo === 'box')     val = area * 120;
       if (tipo === 'espelho' && a.id === 'botoes') val = larg >= 60 ? 4*15 : 0;
@@ -40,13 +91,22 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km }) {
   return { linhas, total, totalAvista: total - descontoBase };
 }
 
-function gerarTextoWpp({ cliente, tipo, larg, alt, vidro, resultado }) {
+function gerarTextoWpp({ cliente, tipo, larg, alt, vidro, resultado, folhasCorrer }) {
   if (!resultado) return '';
   const vidroObj = VIDROS[vidro];
   const dataStr = new Date().toLocaleDateString('pt-BR');
   let txt = `*Orçamento — Ceará Planejados*\n📅 ${dataStr}\n`;
   if (cliente) txt += `👤 Cliente: ${cliente}\n`;
   txt += `\n📦 Produto: *${TIPO_LABEL[tipo]||tipo}*\n📐 Medidas: ${larg} x ${alt} cm\n`;
+  if (tipo === 'correr' && resultado.nFolhas) {
+    const nF = resultado.nFolhas;
+    const nM = resultado.nMoveis;
+    const nFx = resultado.nFixas;
+    txt += `🔲 Configuração: *${nF} folha${nF>1?'s':''}`;
+    if (nFx > 0) txt += ` (${nM} móve${nM>1?'is':'l'} + ${nFx} fixa${nFx>1?'s':''})`;
+    else txt += ` móve${nM>1?'is':'l'}`;
+    txt += `*\n`;
+  }
   if (vidroObj) txt += `🔷 Vidro: ${vidroObj.nome}\n`;
   txt += `\n*Composição:*\n`;
   resultado.linhas.forEach(l => txt += `• ${l.nome}: ${formatBRL(l.valor)}\n`);
