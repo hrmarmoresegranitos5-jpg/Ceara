@@ -1,8 +1,14 @@
 // service-worker.js — Ceará Planejados
-const CACHE_NAME = 'cear-v2';
+const CACHE_NAME = 'cear-v3';
 const ASSETS = [
   './',
   './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './apple-touch-icon.png',
+  './favicon-32x32.png',
+  './favicon-16x16.png',
   './cear-dados.js',
   './cear-db.js',
   './cear-helpers.js',
@@ -17,13 +23,11 @@ const ASSETS = [
   './cear-app.js',
 ];
 
-// Instala e cacheia
 self.addEventListener('install', e => {
   self.skipWaiting();
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
 });
 
-// Apaga caches antigos
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -32,13 +36,16 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Network-first para HTML, cache-first para o resto
 self.addEventListener('fetch', e => {
-  if (e.request.mode === 'navigate') {
-    e.respondWith(fetch(e.request).catch(() => caches.match('./index.html')));
-  } else {
-    e.respondWith(
-      caches.match(e.request).then(r => r || fetch(e.request))
-    );
-  }
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      if (cached) return cached;
+      return fetch(e.request).then(resp => {
+        if (!resp || resp.status !== 200 || resp.type !== 'basic') return resp;
+        const clone = resp.clone();
+        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+        return resp;
+      }).catch(() => caches.match('./index.html'));
+    })
+  );
 });

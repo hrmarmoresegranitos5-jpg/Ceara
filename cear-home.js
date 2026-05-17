@@ -1,5 +1,5 @@
 // ════════════════════════════════════════════════════════════
-// HOME / DASHBOARD
+// HOME / DASHBOARD — Layout minimalista
 // ════════════════════════════════════════════════════════════
 
 const ATALHOS = [
@@ -11,11 +11,12 @@ const ATALHOS = [
   { tipo:'guarda',    icone:'🏗️', nome:'Guarda Corpo',    sub:'Módulos de 120cm',    cor:'rgba(220,100,100,0.1)',borda:'rgba(220,100,100,0.2)' },
 ];
 
-const INFOS = [
-  { ic:'⏰', lbl:'Horário',    val:'Seg–Sex 8h–18h · Sáb 8h–13h',          bg:'rgba(212,175,55,0.1)', border:'rgba(212,175,55,0.2)' },
-  { ic:'🚛', lbl:'Frete',     val:'Grátis até 20 km · Acima sob consulta',  bg:'rgba(58,158,106,0.1)', border:'rgba(58,158,106,0.2)' },
-  { ic:'💳', lbl:'Pagamento', val:'10% desconto à vista · 6x sem juros',    bg:'rgba(80,160,220,0.1)', border:'rgba(80,160,220,0.2)' },
-  { ic:'🔧', lbl:'Instalação',val:'Profissional capacitado · Garantia inclusa',bg:'rgba(160,120,220,0.1)',border:'rgba(160,120,220,0.2)' },
+const MENU_CARDS = [
+  { id:'orc',        icone:'🧮', nome:'Orçamento',  sub:'Calcule preços',      cor:'rgba(212,175,55,0.13)', borda:'rgba(212,175,55,0.28)' },
+  { id:'financeiro', icone:'💎', nome:'Preços',      sub:'Tabela de vidros',    cor:'rgba(80,160,220,0.1)',  borda:'rgba(80,160,220,0.22)' },
+  { id:'historico',  icone:'📂', nome:'Histórico',   sub:'Orçamentos salvos',   cor:'rgba(100,200,140,0.1)',borda:'rgba(100,200,140,0.22)' },
+  { id:'clientes',   icone:'👥', nome:'Clientes',    sub:'Cadastro de clientes',cor:'rgba(160,120,220,0.1)',borda:'rgba(160,120,220,0.22)' },
+  { id:'config',     icone:'⚙️', nome:'Config.',     sub:'Ajustes do sistema',  cor:'rgba(180,180,180,0.08)',borda:'rgba(180,180,180,0.15)' },
 ];
 
 function renderHome(wrap) {
@@ -27,73 +28,48 @@ function renderHome(wrap) {
     return h >= 8 && h < 18;
   })();
 
+  const d = new Date();
+  const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const saudacao = d.getHours() < 12 ? 'Bom dia' : d.getHours() < 18 ? 'Boa tarde' : 'Boa noite';
+
   wrap.innerHTML = `
-    <div id="pgHome">
+    <div id="pgHome" class="home-minimal">
 
-      <!-- HERO BANNER RENOVADO -->
-      <div class="home-hero-card" style="animation:slideUp 220ms ease both">
-        <div class="hhc-glow-top"></div>
-        <div class="hhc-glow-corner"></div>
-
-        <div class="hhc-header">
-          <div class="hhc-logo">🪨</div>
-          <div class="hhc-title-block">
-            <div class="hhc-nome">Ceará Planejados</div>
-            <div class="hhc-cats">Vidraçaria · Marcenaria · Serralheria</div>
-          </div>
-          <div class="hhc-status ${isAberto ? 'aberto' : 'fechado'}">
-            <span class="hhc-dot ${isAberto ? 'pulsing' : ''}"></span>
-            ${isAberto ? 'ABERTO' : 'FECHADO'}
-          </div>
-        </div>
-
-        <div class="hhc-divider"></div>
-
-        <div class="hhc-pills">
-          <div class="hhc-pill">
-            <div class="hhc-pill-val">8mm</div>
-            <div class="hhc-pill-lbl">🔷 Temperado</div>
-          </div>
-          <div class="hhc-pill-sep"></div>
-          <div class="hhc-pill">
-            <div class="hhc-pill-val">10%</div>
-            <div class="hhc-pill-lbl">💳 À vista</div>
-          </div>
-          <div class="hhc-pill-sep"></div>
-          <div class="hhc-pill">
-            <div class="hhc-pill-val">20km</div>
-            <div class="hhc-pill-lbl">🚛 Frete grátis</div>
-          </div>
+      <!-- SAUDAÇÃO TOPO -->
+      <div class="hm-top" style="animation:slideUp 160ms ease both">
+        <div class="hm-greet">${saudacao} 👋</div>
+        <div class="hm-status ${isAberto ? 'aberto' : 'fechado'}">
+          <span class="hm-dot ${isAberto ? 'pulsing' : ''}"></span>
+          ${isAberto ? 'Aberto agora' : 'Fechado'}
         </div>
       </div>
 
-      <!-- ATALHOS ORÇAMENTO -->
-      <div class="section" style="animation:slideUp 260ms ease both">
-        <div class="section-ttl">— Calcular Orçamento</div>
-        <div class="qa-grid">
+      <!-- ORÇAMENTO RÁPIDO -->
+      <div class="hm-section" style="animation:slideUp 200ms ease both">
+        <div class="hm-section-lbl">Orçamento rápido</div>
+        <div class="hm-orc-grid">
           ${ATALHOS.map((a,i) => `
-            <div class="qa-btn" style="animation-delay:${80+i*40}ms;--qa-color:${a.borda}" onclick="goOrc('${a.tipo}')">
-              <span class="qa-ic" style="background:${a.cor};border:1px solid ${a.borda}">${a.icone}</span>
-              <div class="qa-nm">${a.nome}</div>
-              <div class="qa-sm">${a.sub}</div>
-              <div class="qa-arr">›</div>
-            </div>
+            <button class="hm-orc-btn" style="animation-delay:${i*30}ms;--hob-color:${a.borda};--hob-bg:${a.cor}" onclick="goOrc('${a.tipo}')">
+              <span class="hm-orc-ic">${a.icone}</span>
+              <span class="hm-orc-nm">${a.nome}</span>
+            </button>
           `).join('')}
         </div>
       </div>
 
-      <!-- INFORMAÇÕES -->
-      <div class="section" style="animation:slideUp 300ms ease both">
-        <div class="section-ttl">— Informações</div>
-        <div class="card" style="padding:2px 16px">
-          ${INFOS.map(info => `
-            <div class="info-item">
-              <span class="info-ic" style="background:${info.bg};border:1px solid ${info.border}">${info.ic}</span>
-              <div class="info-body">
-                <div class="info-lbl">${info.lbl}</div>
-                <div class="info-val">${info.val}</div>
+      <!-- MENU PRINCIPAL -->
+      <div class="hm-section" style="animation:slideUp 240ms ease both">
+        <div class="hm-section-lbl">Menu</div>
+        <div class="hm-menu-list">
+          ${MENU_CARDS.map((m,i) => `
+            <button class="hm-menu-row" style="animation-delay:${i*35}ms" onclick="navTo('${m.id}')">
+              <span class="hm-menu-ic" style="background:${m.cor};border:1px solid ${m.borda}">${m.icone}</span>
+              <div class="hm-menu-txt">
+                <div class="hm-menu-nm">${m.nome}</div>
+                <div class="hm-menu-sub">${m.sub}</div>
               </div>
-            </div>
+              <span class="hm-menu-arr">›</span>
+            </button>
           `).join('')}
         </div>
       </div>

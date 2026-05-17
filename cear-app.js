@@ -224,26 +224,9 @@ function setupPWAButtons() {
         } catch(e) { console.warn('PWA prompt error:', e); }
       });
     }
-  } else if (_isAndroid || (!_isIOS && !_pwaPrompt)) {
-    // Android sem prompt ainda, ou desktop Chrome: mostra banner com fallback
-    if (subEl) subEl.textContent = 'Menu do Chrome (⋮) → "Adicionar à tela inicial"';
-    if (installBtn) { installBtn.textContent = 'Como instalar'; installBtn.style.fontSize = '.65rem'; }
-    banner.classList.add('show');
-    if (installBtn) {
-      installBtn.addEventListener('click', async () => {
-        if (_pwaPrompt) {
-          // Prompt chegou depois: usa ele
-          try {
-            _pwaPrompt.prompt();
-            const { outcome } = await _pwaPrompt.userChoice;
-            if (outcome === 'accepted') { banner.classList.remove('show'); _pwaPrompt = null; }
-          } catch(e) {}
-        } else {
-          alert('Para instalar no Android:\n\n1. Toque nos 3 pontos (⋮) no canto superior do Chrome\n2. Toque em "Adicionar à tela inicial"\n3. Confirme tocando em "Adicionar"');
-        }
-      });
-    }
   }
+  // Android/Chrome sem prompt ainda: aguarda o evento chegar naturalmente
+  // (o listener 'beforeinstallprompt' no topo vai mostrar o banner quando disponível)
 
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
