@@ -280,6 +280,7 @@ function setupPWAButtons() {
 // ════════════════════════════════════════════════════════════
 
 function initApp() {
+  loadCFG(); // carrega preços/configurações do localStorage
   try {
     // Header date
     function getDataHdr() {

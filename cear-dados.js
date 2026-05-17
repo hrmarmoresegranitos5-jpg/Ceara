@@ -1,8 +1,9 @@
 // ════════════════════════════════════════════════════════════
-// DADOS / CONFIGURAÇÃO
+// DADOS / CONFIGURAÇÃO — com suporte a override via localStorage
 // ════════════════════════════════════════════════════════════
 
-const VIDROS = {
+// ── Defaults (tabela oficial) ─────────────────────────────────
+const VIDROS_DEF = {
   temp_trans: { nome:'Transparente 8mm (Temp.)', preco:420,  temperado:true  },
   temp_fume:  { nome:'Fumê 8mm (Temp.)',         preco:455,  temperado:true  },
   temp_serig: { nome:'Serigrafado 8mm (Temp.)',  preco:650,  temperado:true  },
@@ -16,14 +17,108 @@ const VIDROS = {
   esp_4:      { nome:'Espelho 4mm',              preco:280,  temperado:false },
 };
 
+const CORRER_PRECOS_DEF = {
+  trilho_sup:   85,
+  guia_inf:     45,
+  kit_carrinho: 95,
+  fechadura:   150,
+  puxador:     100,
+};
+
+const COMERCIAL_DEF = {
+  frete_gratis_km:    20,
+  frete_por_km_extra:  3,
+  desconto_avista:  0.10,
+  botao_frances:    2.50,
+  botoes_quant:        4,
+  recorte_por_m2:     10,
+  box_por_m2:        120,
+  janela_por_m:      100,
+  mola_hidraulica:   500,
+  cantoneira_por_m:   10,
+  pu_por_m:           70,
+};
+
+const EMPRESA_DEF = {
+  nome:      'Ceará Planejados',
+  subtitulo: 'Vidraçaria · Marcenaria · Serralheria',
+  whatsapp:  '5585999999999',
+  horario:   'Seg–Sex 8h–18h · Sáb 8h–13h',
+  pagamento: 'PIX · Dinheiro · Cartão · Parcelado',
+  frete_txt: 'Grátis até 20 km · Acima sob consulta',
+};
+
+// ── Carregar CFG com overrides do localStorage ────────────────
+let CFG = {};
+
+function loadCFG() {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem('ceara_cfg') || '{}'); } catch(e) {}
+
+  // Vidros: merge preços
+  const vPrices = saved.vidros || {};
+  CFG.vidros = {};
+  for (const k in VIDROS_DEF) {
+    CFG.vidros[k] = { ...VIDROS_DEF[k], preco: vPrices[k] ?? VIDROS_DEF[k].preco };
+  }
+
+  // Correr
+  const cp = saved.correr || {};
+  CFG.correr = {
+    trilho_sup:   cp.trilho_sup   ?? CORRER_PRECOS_DEF.trilho_sup,
+    guia_inf:     cp.guia_inf     ?? CORRER_PRECOS_DEF.guia_inf,
+    kit_carrinho: cp.kit_carrinho ?? CORRER_PRECOS_DEF.kit_carrinho,
+    fechadura:    cp.fechadura    ?? CORRER_PRECOS_DEF.fechadura,
+    puxador:      cp.puxador      ?? CORRER_PRECOS_DEF.puxador,
+  };
+
+  // Comercial
+  const co = saved.comercial || {};
+  CFG.comercial = {};
+  for (const k in COMERCIAL_DEF) {
+    CFG.comercial[k] = co[k] ?? COMERCIAL_DEF[k];
+  }
+
+  // Empresa
+  const em = saved.empresa || {};
+  CFG.empresa = {};
+  for (const k in EMPRESA_DEF) {
+    CFG.empresa[k] = em[k] ?? EMPRESA_DEF[k];
+  }
+
+  // Re-exporta como globais para compatibilidade com código existente
+  VIDROS        = CFG.vidros;
+  CORRER_PRECOS = CFG.correr;
+  FRETE_GRATIS_KM     = CFG.comercial.frete_gratis_km;
+  FRETE_POR_KM_EXTRA  = CFG.comercial.frete_por_km_extra;
+  DESCONTO_AVISTA     = CFG.comercial.desconto_avista;
+}
+
+function saveCFG(data) {
+  localStorage.setItem('ceara_cfg', JSON.stringify(data));
+  loadCFG();
+}
+
+function resetCFG() {
+  localStorage.removeItem('ceara_cfg');
+  loadCFG();
+}
+
+// ── Estruturas estáticas (não configuráveis) ──────────────────
+const CORRER_MOVEIS = { 1:1, 2:2, 4:2 };
+
 const ACESSORIOS_CONFIG = {
-  pivotante:  [{ id:'kit',      nome:'Kit Pivotante',       preco:150, obrig:true  },{ id:'puxador', nome:'Puxador',    preco:100, obrig:false },{ id:'fixador', nome:'Fixador',   preco:60,  obrig:false }],
-  correr:     [{ id:'kit',      nome:'Kit Porta de Correr', preco:null,obrig:true  },{ id:'fechadura',nome:'Fechadura VP',preco:150,obrig:true  },{ id:'puxador', nome:'Puxador',   preco:100, obrig:true  }],
-  janela:     [{ id:'kit',      nome:'Kit Janela',          preco:null,obrig:true  },{ id:'bate',    nome:'Bate-fecha VP',preco:50, obrig:true  }],
-  basculante: [{ id:'kit',      nome:'Kit Basculante',      preco:150, obrig:true  }],
-  box:        [{ id:'kit',      nome:'Kit Box',             preco:null,obrig:true  }],
-  espelho:    [{ id:'botoes',   nome:'Botões (≥60cm larg.)',preco:null,obrig:false },{ id:'colado',  nome:'Fixação Colada',preco:0,  obrig:false }],
-  comum:      [{ id:'recorte',  nome:'Recorte (+R$10/m²)',  preco:null,obrig:false }],
+  pivotante:  [{ id:'kit',      nome:'Kit Pivotante',        preco:150, obrig:true  },
+               { id:'puxador',  nome:'Puxador',              preco:100, obrig:false },
+               { id:'fixador',  nome:'Fixador',              preco:60,  obrig:false }],
+  correr:     [],
+  janela:     [{ id:'kit',      nome:'Kit Janela',           preco:null,obrig:true  },
+               { id:'bate',     nome:'Bate-fecha VP',        preco:50,  obrig:true  }],
+  basculante: [{ id:'kit',      nome:'Kit Basculante',       preco:150, obrig:true  }],
+  box:        [{ id:'kit',      nome:'Kit Box',              preco:null, obrig:true  }],
+  espelho:    [{ id:'botoes',   nome:'Botões (≥60cm larg.)', preco:null, obrig:false },
+               { id:'colado',   nome:'Fixação Colada',       preco:0,   obrig:false }],
+  comum:      [{ id:'recorte',  nome:'Recorte (+R$10/m²)',   preco:null, obrig:false }],
   guarda:     [],
 };
 
@@ -63,18 +158,14 @@ const TIPOS = [
 const TIPO_LABEL = { pivotante:'Porta Pivotante',correr:'Porta de Correr',janela:'Janela',box:'Box de Banheiro',espelho:'Espelho',guarda:'Guarda Corpo',basculante:'Basculante',comum:'Vidro Comum' };
 const TIPO_ICON  = { pivotante:'🚪',correr:'🔲',janela:'🪟',box:'🛁',espelho:'🪞',guarda:'🏗️',basculante:'⬆️',comum:'🔷' };
 
-const FRETE_GRATIS_KM = 20;
-const FRETE_POR_KM_EXTRA = 3;
-const DESCONTO_AVISTA = 0.10;
-
-// ── Orçamento state ──
+// ── Estado do orçamento ───────────────────────────────────────
 let orcState = {
-  tipo: 'pivotante',
-  larg: 90, alt: 210,
-  vidroKey: 'temp_trans',
-  accs: {},
-  km: 0,
-  cliente: '', fone: '',
-  resultado: null,
+  tipo:'pivotante', larg:90, alt:210,
+  vidroKey:'temp_trans', accs:{}, km:0,
+  cliente:'', fone:'',
+  resultado:null, folhasCorrer:2,
 };
 
+// Declara os globais que loadCFG vai preencher
+let VIDROS = {}, CORRER_PRECOS = {};
+let FRETE_GRATIS_KM = 20, FRETE_POR_KM_EXTRA = 3, DESCONTO_AVISTA = 0.10;

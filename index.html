@@ -878,6 +878,95 @@ input[type=date] { color-scheme:dark; }
   font-size: 1.1rem; color: rgba(212,175,55,0.4);
   font-weight: 800; flex-shrink: 0;
 }
+
+/* ── Config Screen ─────────────────────────────────────────── */
+#pgConfig { padding: 0 16px; }
+
+.cfg-header {
+  text-align: center;
+  padding: 20px 0 16px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  margin-bottom: 16px;
+}
+.cfg-header-nm  { font-size: 1.1rem; font-weight: 800; color: var(--gold2, #C9A84C); }
+.cfg-header-sub { font-size: .7rem;  color: var(--t4,  #888); margin-top: 3px; }
+
+.cfg-sec {
+  background: var(--card-bg, #161620);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 14px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.cfg-sec-ttl {
+  font-size: .65rem;
+  font-weight: 700;
+  color: var(--gold2, #C9A84C);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  padding: 10px 14px 8px;
+  background: rgba(201,168,76,.05);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+
+.cfg-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.cfg-row:last-child { border-bottom: none; }
+
+.cfg-lbl {
+  flex: 1;
+  font-size: .73rem;
+  color: var(--t2, #ccc);
+  min-width: 0;
+}
+
+.cfg-inp-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.cfg-pfx, .cfg-sfx {
+  font-size: .65rem;
+  color: var(--t4, #888);
+  white-space: nowrap;
+}
+.cfg-inp {
+  width: 80px;
+  text-align: right;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--tx, #f0f0f0);
+  font-family: inherit;
+  outline: none;
+  transition: border-color .2s;
+}
+.cfg-inp:focus { border-color: var(--gold2, #C9A84C); }
+.cfg-inp.cfg-txt {
+  width: 160px;
+  text-align: left;
+  font-weight: 400;
+  font-size: .72rem;
+}
+
+.cfg-actions {
+  padding: 8px 0 16px;
+}
+.btn-outline {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.15);
+  color: var(--t3, #888);
+}
+
 </style>
 </head>
 <body>

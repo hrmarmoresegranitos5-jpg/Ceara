@@ -1,3 +1,4 @@
+const CACHE = 'ceara-v16';
 // service-worker.js — Ceará Planejados
 const CACHE_NAME = 'cear-v4';
 const ASSETS = [
