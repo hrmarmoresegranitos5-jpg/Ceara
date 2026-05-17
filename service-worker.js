@@ -1,5 +1,5 @@
 // service-worker.js — Ceará Planejados
-const CACHE_NAME = 'cear-v7';
+const CACHE_NAME = 'cear-v20';
 const ASSETS = [
   './',
   './index.html',
@@ -29,6 +29,8 @@ self.addEventListener('install', e => {
   self.skipWaiting();
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
 });
+
+self.addEventListener('message', e => { if (e.data === 'skipWaiting') self.skipWaiting(); });
 
 self.addEventListener('activate', e => {
   e.waitUntil(
