@@ -7,7 +7,13 @@ function renderOrc(wrap) {
   const isPiv    = s.tipo === 'pivotante';
   const isCorrer = s.tipo === 'correr';
   const isJanela = s.tipo === 'janela';
-  const accConfig = ACESSORIOS_CONFIG[s.tipo] || [];
+  // Para pivotante 2 folhas: adiciona contra fechadura automaticamente
+  let accConfig = (ACESSORIOS_CONFIG[s.tipo] || []).slice();
+  if (isPiv && (s.pivFolhas||1) === 2) {
+    if (!accConfig.find(a => a.id === 'contra')) {
+      accConfig.push({ id:'contra', nome:'Contra fechadura (2 folhas)', preco:50, obrig:true });
+    }
+  }
   const vidrosDispo = (VIDROS_POR_TIPO[s.tipo]||[]).map(k=>({key:k,...CFG.vidros[k]}));
 
   // ── Seletor visual de configuração (pivotante) — usa concatenação para evitar
@@ -97,34 +103,54 @@ function renderOrc(wrap) {
     </div>
   ` : '';
 
-  // ── Kit pivotante + Mola (separados) ──
-  const kitBlock = isPiv ? `
-    <div class="field">
-      <label>Kit pivotante</label>
-      <div class="kit-opts">
-        <button class="kit-btn${s.kitPivotante==='comum'?' active':''}" onclick="orcSetKit('comum')">
-          <span class="kit-nm">Comum</span>
-          <span class="kit-sub">R$ 150</span>
-          <span class="kit-desc">Padrão</span>
-        </button>
-        <button class="kit-btn${s.kitPivotante==='jumbo'?' active':''}" onclick="orcSetKit('jumbo')">
-          <span class="kit-nm">Jumbo</span>
-          <span class="kit-sub">R$ 350</span>
-          <span class="kit-desc">Portas grandes/pesadas</span>
-        </button>
-      </div>
-    </div>
-    <div class="field">
-      <label>Mola hidráulica</label>
-      <div class="kit-opts">
-        <button class="kit-btn kit-btn-mola${s.temMola?' active':''}" onclick="orcToggleMola()" style="flex:1">
-          <span class="kit-nm">${s.temMola ? '✓ Mola Hidráulica' : '+ Mola Hidráulica'}</span>
-          <span class="kit-sub">R$ 500</span>
-          <span class="kit-desc">Instala junto com o kit · Fecha automático</span>
-        </button>
-      </div>
-    </div>
-  ` : '';
+  // ── Kit pivotante + Mola (separados, sem template literals aninhados) ──
+  let kitBlock = '';
+  if (isPiv) {
+    // SVG do pivô comum (triângulo + linha)
+    const svgComum = '<svg viewBox="0 0 44 44" width="44" height="44" style="display:block;margin:0 auto 4px">'
+      + '<rect x="4" y="4" width="36" height="36" rx="4" fill="none" stroke="rgba(100,200,255,0.2)" stroke-width="1"/>'
+      + '<rect x="18" y="6" width="8" height="32" rx="2" fill="rgba(255,200,80,0.3)" stroke="rgba(255,200,80,0.6)" stroke-width="1.5"/>'
+      + '<circle cx="22" cy="38" r="4" fill="none" stroke="rgba(255,200,80,0.7)" stroke-width="1.5"/>'
+      + '<circle cx="22" cy="6" r="3" fill="rgba(255,200,80,0.5)"/>'
+      + '</svg>';
+    // SVG do pivô jumbo (mais largo/robusto)
+    const svgJumbo = '<svg viewBox="0 0 44 44" width="44" height="44" style="display:block;margin:0 auto 4px">'
+      + '<rect x="4" y="4" width="36" height="36" rx="4" fill="none" stroke="rgba(100,200,255,0.2)" stroke-width="1"/>'
+      + '<rect x="15" y="6" width="14" height="32" rx="3" fill="rgba(255,200,80,0.3)" stroke="rgba(255,200,80,0.6)" stroke-width="1.8"/>'
+      + '<circle cx="22" cy="38" r="5" fill="none" stroke="rgba(255,200,80,0.7)" stroke-width="2"/>'
+      + '<circle cx="22" cy="6" r="4" fill="rgba(255,200,80,0.5)"/>'
+      + '<rect x="13" y="18" width="18" height="8" rx="2" fill="rgba(255,200,80,0.2)" stroke="rgba(255,200,80,0.4)" stroke-width="1"/>'
+      + '</svg>';
+    // SVG da mola (espiral)
+    const svgMola = '<svg viewBox="0 0 44 44" width="44" height="44" style="display:block;margin:0 auto 4px">'
+      + '<rect x="4" y="4" width="36" height="36" rx="4" fill="none" stroke="rgba(100,200,255,0.2)" stroke-width="1"/>'
+      + '<path d="M22,8 Q34,12 22,16 Q10,20 22,24 Q34,28 22,32 Q10,36 22,40" fill="none" stroke="rgba(255,200,80,0.7)" stroke-width="2" stroke-linecap="round"/>'
+      + '<circle cx="22" cy="8" r="2.5" fill="rgba(255,200,80,0.6)"/>'
+      + '<circle cx="22" cy="40" r="2.5" fill="rgba(255,200,80,0.6)"/>'
+      + '</svg>';
+
+    // Build kit HTML safely
+    function _kitBtn(kitId, svg, nm, sub, desc) {
+      return '<button class="kit-btn' + (s.kitPivotante===kitId?' active':'')
+           + '" onclick="orcSetKit(\'' + kitId + '\')">'
+           + svg + '<span class="kit-nm">' + nm + '</span>'
+           + '<span class="kit-sub">' + sub + '</span>'
+           + '<span class="kit-desc">' + desc + '</span></button>';
+    }
+    kitBlock = '<div class="field"><label>Kit pivotante</label>'
+      + '<div class="kit-opts kit-opts-kits">'
+      + _kitBtn('comum', svgComum, 'Comum',  'R$ 150', 'Padrão')
+      + _kitBtn('jumbo', svgJumbo, 'Jumbo',  'R$ 350', 'Portas grandes')
+      + '</div></div>'
+      + '<div class="field"><label>Mola hidráulica'
+      + ' <span style="font-size:.6rem;color:var(--t4)">— instala junto com o kit</span></label>'
+      + '<button class="kit-btn kit-btn-mola' + (s.temMola?' active':'') + '"'
+      + ' onclick="orcToggleMola()" style="width:100%">'
+      + svgMola
+      + '<span class="kit-nm">' + (s.temMola?'✓ Mola Hidráulica':' Mola Hidráulica') + '</span>'
+      + '<span class="kit-sub">R$ 500</span>'
+      + '<span class="kit-desc">Fecha automático</span></button></div>';
+  }
 
 
   // Acessórios visíveis (exclui 'kit' em pivotante, tratado pelo kitBlock)
