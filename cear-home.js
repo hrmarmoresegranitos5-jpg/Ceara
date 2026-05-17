@@ -22,61 +22,57 @@ function renderHome(wrap) {
   const isAberto = (() => {
     const d = new Date();
     const h = d.getHours(), day = d.getDay();
-    if (day === 0) return false; // Domingo
-    if (day === 6) return h >= 8 && h < 13; // Sábado
-    return h >= 8 && h < 18; // Seg-Sex
+    if (day === 0) return false;
+    if (day === 6) return h >= 8 && h < 13;
+    return h >= 8 && h < 18;
   })();
 
   wrap.innerHTML = `
     <div id="pgHome">
-      <!-- BANNER HERO -->
-      <div class="home-banner" style="animation:slideUp 200ms ease both">
-        <div class="home-banner-glow"></div>
-        <div class="home-banner-top">
-          <div>
-            <div class="home-banner-nm">Ceará Planejados</div>
-            <div class="home-banner-sub">Vidraçaria · Marcenaria · Serralheria</div>
+
+      <!-- HERO BANNER RENOVADO -->
+      <div class="home-hero-card" style="animation:slideUp 220ms ease both">
+        <div class="hhc-glow-top"></div>
+        <div class="hhc-glow-corner"></div>
+
+        <div class="hhc-header">
+          <div class="hhc-logo">🪨</div>
+          <div class="hhc-title-block">
+            <div class="hhc-nome">Ceará Planejados</div>
+            <div class="hhc-cats">Vidraçaria · Marcenaria · Serralheria</div>
           </div>
-          <div style="
-            background:${isAberto ? 'rgba(58,158,106,0.18)' : 'rgba(200,80,80,0.15)'};
-            border:1px solid ${isAberto ? 'rgba(58,158,106,0.35)' : 'rgba(200,80,80,0.3)'};
-            border-radius:20px;padding:5px 12px;font-size:.6rem;font-weight:700;
-            color:${isAberto ? '#4DBF88' : '#E07070'};
-            letter-spacing:.05em;display:flex;align-items:center;gap:5px;
-            white-space:nowrap;margin-top:2px;
-            box-shadow:0 2px 10px ${isAberto ? 'rgba(58,158,106,0.15)' : 'rgba(200,80,80,0.12)'};
-          ">
-            <span style="
-              width:6px;height:6px;border-radius:50%;
-              background:${isAberto ? '#4DBF88' : '#E07070'};
-              box-shadow:0 0 8px ${isAberto ? 'rgba(58,158,106,0.9)' : 'rgba(200,80,80,0.7)'};
-              display:inline-block;
-              ${isAberto ? 'animation:pulse 2s infinite' : ''}
-            "></span>${isAberto ? 'ABERTO' : 'FECHADO'}
+          <div class="hhc-status ${isAberto ? 'aberto' : 'fechado'}">
+            <span class="hhc-dot ${isAberto ? 'pulsing' : ''}"></span>
+            ${isAberto ? 'ABERTO' : 'FECHADO'}
           </div>
         </div>
-        <div class="home-stats">
-          <div class="stat-card">
-            <div class="stat-val">8mm</div>
-            <div class="stat-lbl">Temperado</div>
+
+        <div class="hhc-divider"></div>
+
+        <div class="hhc-pills">
+          <div class="hhc-pill">
+            <div class="hhc-pill-val">8mm</div>
+            <div class="hhc-pill-lbl">🔷 Temperado</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-val">10%</div>
-            <div class="stat-lbl">À vista</div>
+          <div class="hhc-pill-sep"></div>
+          <div class="hhc-pill">
+            <div class="hhc-pill-val">10%</div>
+            <div class="hhc-pill-lbl">💳 À vista</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-val">20km</div>
-            <div class="stat-lbl">Frete grátis</div>
+          <div class="hhc-pill-sep"></div>
+          <div class="hhc-pill">
+            <div class="hhc-pill-val">20km</div>
+            <div class="hhc-pill-lbl">🚛 Frete grátis</div>
           </div>
         </div>
       </div>
 
       <!-- ATALHOS ORÇAMENTO -->
-      <div class="section">
-        <div class="section-ttl">Calcular Orçamento</div>
+      <div class="section" style="animation:slideUp 260ms ease both">
+        <div class="section-ttl">— Calcular Orçamento</div>
         <div class="qa-grid">
           ${ATALHOS.map((a,i) => `
-            <div class="qa-btn" style="animation-delay:${60+i*35}ms;--qa-color:${a.borda}" onclick="goOrc('${a.tipo}')">
+            <div class="qa-btn" style="animation-delay:${80+i*40}ms;--qa-color:${a.borda}" onclick="goOrc('${a.tipo}')">
               <span class="qa-ic" style="background:${a.cor};border:1px solid ${a.borda}">${a.icone}</span>
               <div class="qa-nm">${a.nome}</div>
               <div class="qa-sm">${a.sub}</div>
@@ -87,8 +83,8 @@ function renderHome(wrap) {
       </div>
 
       <!-- INFORMAÇÕES -->
-      <div class="section">
-        <div class="section-ttl">Informações</div>
+      <div class="section" style="animation:slideUp 300ms ease both">
+        <div class="section-ttl">— Informações</div>
         <div class="card" style="padding:2px 16px">
           ${INFOS.map(info => `
             <div class="info-item">
@@ -116,4 +112,3 @@ function goOrc(tipo) {
   orcState.resultado = null;
   navTo('orc');
 }
-

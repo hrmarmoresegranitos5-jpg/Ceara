@@ -172,15 +172,15 @@ function showSplash(onDone) {
 
 let _pwaPrompt = null;
 const _isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone;
-const _isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+const _isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+const _isAndroid = /android/i.test(navigator.userAgent);
 
-// Captura o prompt do Android/Chrome ANTES da splash
+// Captura o prompt ANTES da splash (Android/Chrome)
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   _pwaPrompt = e;
-  // Se o banner já existir no DOM, mostra direto
   const banner = document.getElementById('pwaInstallBanner');
-  if (banner) banner.classList.add('show');
+  if (banner && !banner.classList.contains('show')) banner.classList.add('show');
 });
 
 window.addEventListener('appinstalled', () => {
@@ -190,7 +190,7 @@ window.addEventListener('appinstalled', () => {
 });
 
 function setupPWAButtons() {
-  if (_isInstalled) return; // já é app, não mostra nada
+  if (_isInstalled) return; // já instalado, não mostra nada
 
   const banner     = document.getElementById('pwaInstallBanner');
   const installBtn = document.getElementById('pwaInstallBtn');
@@ -200,35 +200,61 @@ function setupPWAButtons() {
   if (!banner) return;
 
   if (_isIOS) {
-    // iOS: mostra banner com instrução manual
-    if (subEl) subEl.textContent = 'Safari → Compartilhar → "Adicionar à Tela de Início"';
-    if (installBtn) { installBtn.textContent = 'Como instalar'; installBtn.style.fontSize = '.65rem'; }
+    // iOS Safari: instrução manual
+    if (subEl) subEl.textContent = 'Safari → botão Compartilhar → "Adicionar à Tela de Início"';
+    if (installBtn) { installBtn.textContent = 'Ver instruções'; installBtn.style.fontSize = '.65rem'; }
     banner.classList.add('show');
     if (installBtn) {
       installBtn.addEventListener('click', () => {
-        alert('No Safari:\n1. Toque no botão Compartilhar (□↑)\n2. Role até "Adicionar à Tela de Início"\n3. Toque em "Adicionar"');
+        alert('Instalar no iPhone/iPad:\n\n1. Toque no botão Compartilhar (□ com seta ↑) no Safari\n2. Role a lista e toque em "Adicionar à Tela de Início"\n3. Toque em "Adicionar" para confirmar');
       });
     }
   } else if (_pwaPrompt) {
-    // Android/Chrome: prompt já disparou antes do app montar
+    // Prompt já capturado: exibe banner
     banner.classList.add('show');
-  }
-  // Se _pwaPrompt ainda não disparou, o listener acima vai mostrar quando disparar
-
-  if (installBtn && !_isIOS) {
-    installBtn.addEventListener('click', async () => {
-      if (!_pwaPrompt) return;
-      _pwaPrompt.prompt();
-      const { outcome } = await _pwaPrompt.userChoice;
-      if (outcome === 'accepted') {
-        banner.classList.remove('show');
-        _pwaPrompt = null;
-      }
-    });
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        try {
+          _pwaPrompt.prompt();
+          const { outcome } = await _pwaPrompt.userChoice;
+          if (outcome === 'accepted') {
+            banner.classList.remove('show');
+            _pwaPrompt = null;
+          }
+        } catch(e) { console.warn('PWA prompt error:', e); }
+      });
+    }
+  } else if (_isAndroid || (!_isIOS && !_pwaPrompt)) {
+    // Android sem prompt ainda, ou desktop Chrome: mostra banner com fallback
+    if (subEl) subEl.textContent = 'Menu do Chrome (⋮) → "Adicionar à tela inicial"';
+    if (installBtn) { installBtn.textContent = 'Como instalar'; installBtn.style.fontSize = '.65rem'; }
+    banner.classList.add('show');
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        if (_pwaPrompt) {
+          // Prompt chegou depois: usa ele
+          try {
+            _pwaPrompt.prompt();
+            const { outcome } = await _pwaPrompt.userChoice;
+            if (outcome === 'accepted') { banner.classList.remove('show'); _pwaPrompt = null; }
+          } catch(e) {}
+        } else {
+          alert('Para instalar no Android:\n\n1. Toque nos 3 pontos (⋮) no canto superior do Chrome\n2. Toque em "Adicionar à tela inicial"\n3. Confirme tocando em "Adicionar"');
+        }
+      });
+    }
   }
 
   if (closeBtn) {
-    closeBtn.addEventListener('click', () => banner.classList.remove('show'));
+    closeBtn.addEventListener('click', () => {
+      banner.classList.remove('show');
+      sessionStorage.setItem('pwaBannerClosed', '1');
+    });
+  }
+
+  // Não mostra se o usuário fechou nesta sessão
+  if (sessionStorage.getItem('pwaBannerClosed')) {
+    banner.classList.remove('show');
   }
 }
 
