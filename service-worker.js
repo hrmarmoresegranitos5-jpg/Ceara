@@ -1,5 +1,5 @@
 // service-worker.js — Ceará Planejados
-const CACHE_NAME = 'cear-v3';
+const CACHE_NAME = 'cear-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,8 @@ const ASSETS = [
   './apple-touch-icon.png',
   './favicon-32x32.png',
   './favicon-16x16.png',
+  './cear-logo.js',
+  './logo.png',
   './cear-dados.js',
   './cear-db.js',
   './cear-helpers.js',

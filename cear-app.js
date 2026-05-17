@@ -1,169 +1,203 @@
 // ════════════════════════════════════════════════════════════
-// SPLASH SCREEN (entrada animada)
+// SPLASH SCREEN
 // ════════════════════════════════════════════════════════════
 
 function showSplash(onDone) {
-  // Esconde o app enquanto o splash roda
   const sAppEl = document.getElementById('sApp');
   if (sAppEl) sAppEl.style.display = 'none';
 
   const splash = document.createElement('div');
   splash.id = 'splash';
+
+  const style = document.createElement('style');
+  style.textContent = `
+    #splash {
+      position:fixed;inset:0;z-index:9999;
+      background:#080810;
+      display:flex;align-items:center;justify-content:center;
+      overflow:hidden;
+    }
+    #splashBg {
+      position:absolute;inset:0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 30%, rgba(201,168,76,0.09) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 40% at 20% 80%, rgba(80,100,200,0.06) 0%, transparent 60%),
+        linear-gradient(180deg,#0D0D1C 0%,#080810 100%);
+    }
+    /* Partículas douradas */
+    .sp-p {
+      position:absolute;border-radius:50%;
+      background:rgba(212,175,55,0.5);
+      animation:spFloat var(--d,3s) ease-in-out infinite alternate;
+      animation-delay:var(--dl,0s);
+    }
+    @keyframes spFloat {
+      from{transform:translateY(0) scale(1);opacity:var(--op,.3)}
+      to{transform:translateY(-14px) scale(1.3);opacity:calc(var(--op,.3)*2)}
+    }
+    /* Linhas decorativas laterais */
+    .sp-line {
+      position:absolute;width:1px;
+      background:linear-gradient(180deg,transparent,rgba(212,175,55,0.3),transparent);
+      animation:spLineFade 2.5s ease-in-out infinite alternate;
+      animation-delay:var(--dl,0s);
+    }
+    @keyframes spLineFade {
+      from{opacity:0.2;transform:scaleY(0.7)}
+      to{opacity:0.7;transform:scaleY(1)}
+    }
+    #splashInner {
+      display:flex;flex-direction:column;align-items:center;
+      gap:0;padding:0 32px;
+      position:relative;z-index:1;
+      animation:splashIn 600ms cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes splashIn {
+      from{opacity:0;transform:scale(.8) translateY(30px)}
+      to{opacity:1;transform:scale(1) translateY(0)}
+    }
+    @keyframes splashOut {
+      from{opacity:1;transform:scale(1);filter:blur(0)}
+      to{opacity:0;transform:scale(1.06);filter:blur(6px)}
+    }
+    /* Logo container com glow */
+    #splashLogoWrap {
+      position:relative;
+      width:200px;height:200px;
+      display:flex;align-items:center;justify-content:center;
+      margin-bottom:4px;
+    }
+    #splashLogoGlow {
+      position:absolute;inset:-20px;border-radius:50%;
+      background:radial-gradient(circle,rgba(201,168,76,0.2) 0%,transparent 65%);
+      animation:glowPulse 2.5s ease-in-out infinite alternate;
+    }
+    @keyframes glowPulse {
+      from{transform:scale(1);opacity:0.6}
+      to{transform:scale(1.15);opacity:1}
+    }
+    #splashLogoRing {
+      position:absolute;inset:0;border-radius:50%;
+      border:1px solid rgba(212,175,55,0.25);
+      animation:ringExpand 2s ease-out infinite;
+    }
+    #splashLogoRing2 {
+      position:absolute;inset:-12px;border-radius:50%;
+      border:1px solid rgba(212,175,55,0.1);
+      animation:ringExpand 2s ease-out infinite;
+      animation-delay:.6s;
+    }
+    @keyframes ringExpand {
+      from{transform:scale(0.9);opacity:0.6}
+      to{transform:scale(1.08);opacity:0}
+    }
+    #splashLogo {
+      width:180px;height:180px;
+      object-fit:contain;
+      position:relative;z-index:1;
+      filter:drop-shadow(0 0 24px rgba(212,175,55,0.35)) drop-shadow(0 8px 32px rgba(0,0,0,0.8));
+      animation:logoShimmer 3s ease-in-out infinite alternate;
+    }
+    @keyframes logoShimmer {
+      from{filter:drop-shadow(0 0 16px rgba(212,175,55,0.25)) drop-shadow(0 8px 32px rgba(0,0,0,0.8))}
+      to{filter:drop-shadow(0 0 36px rgba(212,175,55,0.55)) drop-shadow(0 0 60px rgba(212,175,55,0.15)) drop-shadow(0 8px 32px rgba(0,0,0,0.8))}
+    }
+    #splashNome {
+      font-family:'Outfit',sans-serif;
+      font-size:1.6rem;font-weight:800;letter-spacing:-.02em;
+      background:linear-gradient(135deg,#EDD060 0%,#C9A84C 40%,#EDD060 80%);
+      background-size:200% 100%;
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+      animation:textShimmer 3s ease-in-out infinite;
+      margin-bottom:4px;
+    }
+    @keyframes textShimmer {
+      0%{background-position:0% center}
+      50%{background-position:100% center}
+      100%{background-position:0% center}
+    }
+    #splashSub {
+      font-family:'Outfit',sans-serif;
+      font-size:.68rem;font-weight:400;
+      color:rgba(180,175,165,0.6);letter-spacing:.06em;
+      margin-bottom:32px;
+    }
+    #splashBar {
+      width:120px;height:2px;
+      background:rgba(255,255,255,0.05);
+      border-radius:10px;overflow:hidden;
+    }
+    #splashBarFill {
+      height:100%;width:0%;
+      background:linear-gradient(90deg,#8B6820,#EDD060,#C9A84C);
+      border-radius:10px;
+      transition:width 1.6s cubic-bezier(.4,0,.2,1);
+      box-shadow:0 0 10px rgba(237,208,96,0.6);
+    }
+  `;
+  document.head.appendChild(style);
+
   splash.innerHTML = `
     <div id="splashBg"></div>
     <div id="splashParticles"></div>
     <div id="splashInner">
       <div id="splashLogoWrap">
-        <div id="splashLogo">🪨</div>
-        <div id="splashLogoShimmer"></div>
+        <div id="splashLogoGlow"></div>
+        <div id="splashLogoRing"></div>
+        <div id="splashLogoRing2"></div>
+        <img id="splashLogo" src="${typeof LOGO_B64!=='undefined'?LOGO_B64:'logo.png'}" alt="Ceará Planejados">
       </div>
       <div id="splashNome">Ceará Planejados</div>
       <div id="splashSub">Vidraçaria · Marcenaria · Serralheria</div>
       <div id="splashBar"><div id="splashBarFill"></div></div>
     </div>
   `;
-
-  const style = document.createElement('style');
-  style.textContent = `
-    #splash {
-      position: fixed; inset: 0; z-index: 9999;
-      background: #0A0A16;
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden;
-    }
-    #splashBg {
-      position: absolute; inset: 0;
-      background: radial-gradient(ellipse 70% 60% at 50% 40%, rgba(201,168,76,0.07) 0%, transparent 70%),
-                  radial-gradient(ellipse 40% 40% at 20% 80%, rgba(201,168,76,0.04) 0%, transparent 60%),
-                  linear-gradient(180deg, #0D0D1C 0%, #0A0A14 100%);
-    }
-    #splashParticles {
-      position: absolute; inset: 0; pointer-events: none;
-    }
-    .sp-dot {
-      position: absolute; border-radius: 50%;
-      background: rgba(212,175,55,0.4);
-      animation: spFloat var(--dur,3s) ease-in-out infinite alternate;
-    }
-    @keyframes spFloat {
-      from { transform: translateY(0) scale(1); opacity: var(--op,0.3); }
-      to   { transform: translateY(-12px) scale(1.2); opacity: calc(var(--op,0.3)*1.8); }
-    }
-    #splashInner {
-      display: flex; flex-direction: column; align-items: center;
-      gap: 10px; padding: 0 40px; position: relative; z-index: 1;
-      animation: splashIn 560ms cubic-bezier(.34,1.56,.64,1) both;
-    }
-    @keyframes splashIn {
-      from { opacity: 0; transform: scale(.78) translateY(24px); }
-      to   { opacity: 1; transform: scale(1) translateY(0); }
-    }
-    @keyframes splashOut {
-      from { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); }
-      to   { opacity: 0; transform: scale(1.08) translateY(-8px); filter: blur(4px); }
-    }
-    #splashLogoWrap {
-      position: relative; width: 88px; height: 88px;
-      margin-bottom: 10px;
-    }
-    #splashLogo {
-      width: 88px; height: 88px;
-      border-radius: 24px;
-      background: linear-gradient(145deg, #1E1E32, #12121E);
-      border: 1px solid rgba(212,175,55,0.45);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 2.8rem; position: relative; overflow: hidden;
-      box-shadow:
-        0 0 0 1px rgba(212,175,55,0.1),
-        0 0 40px rgba(212,175,55,0.18),
-        0 12px 48px rgba(0,0,0,0.8);
-      animation: splashBloom 2.4s ease-in-out infinite alternate;
-    }
-    @keyframes splashBloom {
-      from {
-        box-shadow: 0 0 0 1px rgba(212,175,55,0.1), 0 0 24px rgba(212,175,55,0.12), 0 12px 48px rgba(0,0,0,0.8);
-      }
-      to {
-        box-shadow: 0 0 0 1px rgba(212,175,55,0.25), 0 0 52px rgba(212,175,55,0.32), 0 0 80px rgba(212,175,55,0.10), 0 12px 48px rgba(0,0,0,0.8);
-      }
-    }
-    #splashLogoShimmer {
-      position: absolute; inset: 0; border-radius: 24px;
-      background: linear-gradient(105deg, transparent 30%, rgba(237,208,96,0.22) 50%, transparent 70%);
-      background-size: 200% 100%;
-      animation: splashShimmer 2s ease-in-out infinite;
-      pointer-events: none;
-    }
-    #splashNome {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.45rem; font-weight: 800;
-      color: #EDEAE0; letter-spacing: -.015em;
-      background: linear-gradient(135deg, #EDD060 0%, #C9A84C 50%, #EDD060 100%);
-      background-size: 200% 100%;
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: splashShimmer 3s ease-in-out infinite;
-    }
-    #splashSub {
-      font-family: 'Outfit', sans-serif;
-      font-size: .72rem; font-weight: 400;
-      color: #6A6870; letter-spacing: .05em;
-    }
-    #splashBar {
-      width: 130px; height: 3px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 10px;
-      margin-top: 32px;
-      overflow: hidden;
-      box-shadow: 0 0 8px rgba(0,0,0,0.4);
-    }
-    #splashBarFill {
-      height: 100%; width: 0%;
-      background: linear-gradient(90deg, #A88030, #EDD060, #C9A84C);
-      border-radius: 10px;
-      transition: width 1.5s cubic-bezier(.4,0,.2,1);
-      box-shadow: 0 0 8px rgba(237,208,96,0.5);
-    }
-  `;
-  document.head.appendChild(style);
   document.body.appendChild(splash);
 
-  // Gera partículas douradas decorativas
-  const particles = splash.querySelector('#splashParticles');
-  const dots = [
-    { x:15, y:20, s:3, op:0.3, dur:'2.8s', delay:'0s' },
-    { x:82, y:15, s:2, op:0.25, dur:'3.2s', delay:'.4s' },
-    { x:90, y:70, s:4, op:0.2, dur:'2.5s', delay:'.8s' },
-    { x:8,  y:75, s:2, op:0.3, dur:'3.5s', delay:'.2s' },
-    { x:50, y:88, s:3, op:0.2, dur:'2.9s', delay:'1s' },
-    { x:70, y:30, s:2, op:0.15, dur:'3.8s', delay:'.6s' },
-    { x:25, y:60, s:2, op:0.2, dur:'4s', delay:'1.2s' },
-  ];
-  dots.forEach(d => {
+  // Partículas
+  const pp = splash.querySelector('#splashParticles');
+  [
+    {x:10,y:18,s:3,op:.35,d:'2.8s',dl:'0s'},
+    {x:85,y:12,s:2,op:.25,d:'3.3s',dl:'.5s'},
+    {x:92,y:68,s:4,op:.2, d:'2.6s',dl:'.9s'},
+    {x:6, y:74,s:2,op:.3, d:'3.6s',dl:'.2s'},
+    {x:50,y:90,s:3,op:.2, d:'3s',  dl:'1s' },
+    {x:72,y:28,s:2,op:.15,d:'4s',  dl:'.7s'},
+    {x:22,y:58,s:2,op:.2, d:'3.8s',dl:'1.3s'},
+    {x:60,y:82,s:2,op:.18,d:'2.9s',dl:'.4s'},
+  ].forEach(p => {
     const el = document.createElement('div');
-    el.className = 'sp-dot';
-    el.style.cssText = `left:${d.x}%;top:${d.y}%;width:${d.s}px;height:${d.s}px;--op:${d.op};--dur:${d.dur};animation-delay:${d.delay};`;
-    particles.appendChild(el);
+    el.className = 'sp-p';
+    el.style.cssText = `left:${p.x}%;top:${p.y}%;width:${p.s}px;height:${p.s}px;--op:${p.op};--d:${p.d};--dl:${p.dl}`;
+    pp.appendChild(el);
+  });
+  // Linhas verticais
+  [
+    {x:8,h:80,dl:'0s'},{x:92,h:60,dl:'.4s'},{x:50,h:40,dl:'.8s'}
+  ].forEach(l => {
+    const el = document.createElement('div');
+    el.className = 'sp-line';
+    el.style.cssText = `left:${l.x}%;top:${(100-l.h)/2}%;height:${l.h}%;--dl:${l.dl}`;
+    pp.appendChild(el);
   });
 
-  // Animação da barra de progresso
   requestAnimationFrame(() => {
     setTimeout(() => {
-      document.getElementById('splashBarFill').style.width = '100%';
-    }, 80);
+      const fill = document.getElementById('splashBarFill');
+      if (fill) fill.style.width = '100%';
+    }, 100);
   });
 
-  // Sair após 1.9s
   setTimeout(() => {
-    splash.style.animation = 'splashOut 420ms cubic-bezier(.4,0,1,1) both';
+    splash.style.animation = 'splashOut 450ms cubic-bezier(.4,0,1,1) both';
     setTimeout(() => {
       splash.remove();
       style.remove();
       const sApp2 = document.getElementById('sApp');
       if (sApp2) sApp2.style.display = '';
       onDone();
-    }, 400);
-  }, 1900);
+    }, 430);
+  }, 2100);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -255,6 +289,17 @@ function initApp() {
     }
     const hdrDataEl = document.getElementById('hdrData');
     if (hdrDataEl) hdrDataEl.textContent = getDataHdr();
+
+    // Injetar logo real no header
+    try {
+      const img = document.getElementById('hdrLogoImg');
+      const fallback = document.getElementById('hdrLogoFallback');
+      if (img && typeof LOGO_B64 !== 'undefined') {
+        img.src = LOGO_B64;
+        img.style.display = 'block';
+        if (fallback) fallback.style.display = 'none';
+      }
+    } catch(e) {}
 
     // Service Worker
     if ('serviceWorker' in navigator) {
