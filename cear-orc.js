@@ -23,9 +23,9 @@ function renderOrc(wrap) {
         { id:'2sf',  label:'2 + fixo',          fixo:'dir', band:false, folhas:2 },
       ].map(c => {
         const cur = (s.pivFolhas===c.folhas && !!s.temFixo===!!c.fixo && !!s.temBandeirola===!!c.band);
-        return `<button class="piv-cfg-btn\${cur?' active':''}" onclick="orcSetPivConfig('\${c.id}')">
-          <svg id="mcad_\${c.id}" class="piv-cfg-cad" viewBox="0 0 60 44" width="60" height="44"></svg>
-          <span class="piv-cfg-lbl">\${c.label}</span>
+        return `<button class="piv-cfg-btn${cur?' active':''}" onclick="orcSetPivConfig('${c.id}')">
+          <svg id="mcad_${c.id}" class="piv-cfg-cad" viewBox="0 0 60 44" width="60" height="44"></svg>
+          <span class="piv-cfg-lbl">${c.label}</span>
         </button>`;
       }).join('')}
     </div>
@@ -40,12 +40,12 @@ function renderOrc(wrap) {
           const moveis = CORRER_MOVEIS[n]??n, fixas=n-moveis;
           const vpvv = moveis<=1?'VP':'VV';
           const desc = fixas>0
-            ? `\${moveis} móve\${moveis>1?'is':'l'} + \${fixas} fixa\${fixas>1?'s':''} · \${vpvv}`
-            : `\${moveis} móve\${moveis>1?'is':'l'} · \${vpvv}`;
-          return `<button class="folha-btn\${s.folhasCorrer===n?' active':''}" onclick="orcSetFolhas(\${n})">
-            <span class="folha-n">\${n}</span>
-            <span class="folha-lbl">\${n===1?'folha':'folhas'}</span>
-            <span class="folha-desc">\${desc}</span>
+            ? `${moveis} móve${moveis>1?'is':'l'} + ${fixas} fixa${fixas>1?'s':''} · ${vpvv}`
+            : `${moveis} móve${moveis>1?'is':'l'} · ${vpvv}`;
+          return `<button class="folha-btn${s.folhasCorrer===n?' active':''}" onclick="orcSetFolhas(${n})">
+            <span class="folha-n">${n}</span>
+            <span class="folha-lbl">${n===1?'folha':'folhas'}</span>
+            <span class="folha-desc">${desc}</span>
           </button>`;
         }).join('')}
       </div>
@@ -94,22 +94,31 @@ function renderOrc(wrap) {
     </div>
   ` : '';
 
-  // ── Kit pivotante ──
+  // ── Kit pivotante + Mola (separados) ──
   const kitBlock = isPiv ? `
     <div class="field">
       <label>Kit pivotante</label>
       <div class="kit-opts">
-        ${[
-          {id:'comum', label:'Comum', sub:'R$ 150', desc:'Padrão'},
-          {id:'jumbo', label:'Jumbo', sub:'R$ 350', desc:'Portas grandes/pesadas'},
-          {id:'mola',  label:'Mola Hidráulica', sub:'R$ 500', desc:'Fecha automático'},
-        ].map(k => `
-          <button class="kit-btn${s.kitPivotante===k.id?' active':''}" onclick="orcSetKit('${k.id}')">
-            <span class="kit-nm">${k.label}</span>
-            <span class="kit-sub">${k.sub}</span>
-            <span class="kit-desc">${k.desc}</span>
-          </button>
-        `).join('')}
+        <button class="kit-btn${s.kitPivotante==='comum'?' active':''}" onclick="orcSetKit('comum')">
+          <span class="kit-nm">Comum</span>
+          <span class="kit-sub">R$ 150</span>
+          <span class="kit-desc">Padrão</span>
+        </button>
+        <button class="kit-btn${s.kitPivotante==='jumbo'?' active':''}" onclick="orcSetKit('jumbo')">
+          <span class="kit-nm">Jumbo</span>
+          <span class="kit-sub">R$ 350</span>
+          <span class="kit-desc">Portas grandes/pesadas</span>
+        </button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Mola hidráulica</label>
+      <div class="kit-opts">
+        <button class="kit-btn kit-btn-mola${s.temMola?' active':''}" onclick="orcToggleMola()" style="flex:1">
+          <span class="kit-nm">${s.temMola ? '✓ Mola Hidráulica' : '+ Mola Hidráulica'}</span>
+          <span class="kit-sub">R$ 500</span>
+          <span class="kit-desc">Instala junto com o kit · Fecha automático</span>
+        </button>
       </div>
     </div>
   ` : '';
@@ -218,7 +227,20 @@ function orcSetKit(id) {
   orcState.kitPivotante = id;
   _orcRefreshCAD();
   orcCalcAndRender();
-  document.querySelectorAll('.kit-btn').forEach(b => b.classList.toggle('active', b.onclick.toString().includes(`'${id}'`)));
+  // Re-render kit buttons
+  document.querySelectorAll('.kit-btn:not(.kit-btn-mola)').forEach(b => {
+    b.classList.toggle('active', b.onclick && b.onclick.toString().includes("'" + id + "'"));
+  });
+}
+
+function orcToggleMola() {
+  orcState.temMola = !orcState.temMola;
+  const btn = document.querySelector('.kit-btn-mola');
+  if (btn) {
+    btn.classList.toggle('active', orcState.temMola);
+    btn.querySelector('.kit-nm').textContent = orcState.temMola ? '✓ Mola Hidráulica' : '+ Mola Hidráulica';
+  }
+  orcCalcAndRender();
 }
 
 function _orcRefreshCAD() {
@@ -304,6 +326,7 @@ function orcTrocaTipo(tipo) {
   orcState.temFixo        = false;
   orcState.temBandeirola  = false;
   orcState.pivFolhas      = 1;
+  orcState.temMola        = false;
   if (tipo==='correr') orcState.folhasCorrer = 2;
   renderOrc(document.getElementById('pgWrap'));
 }

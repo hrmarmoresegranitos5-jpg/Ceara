@@ -6,7 +6,7 @@ function formatBRL(v) {
   return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits:2 });
 }
 
-function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer }) {
+function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, pivFolhas, kitPivotante, temFixo, fixoLarg, temBandeirola, bandH, temMola }) {
   if (!larg || !alt || isNaN(larg) || isNaN(alt)) return null;
   const linhas = []; let total = 0, descontoBase = 0;
   const area = (larg/100)*(alt/100);
@@ -65,10 +65,43 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer }) {
   // ── DEMAIS TIPOS ────────────────────────────────────────────
   if (vidroObj) {
     const val = area * vidroObj.preco;
-    linhas.push({ nome:vidroObj.nome, valor:val });
+    linhas.push({ nome:vidroObj.nome + (tipo==='pivotante'&&(pivFolhas||1)>1?' (2 folhas)':''), valor:val });
     total += val;
     if (vidroObj.temperado) descontoBase += val * DESCONTO_AVISTA;
+
+    // Fixo lateral
+    if (tipo === 'pivotante' && temFixo && fixoLarg > 0) {
+      const areaFixo = (fixoLarg/100) * (alt/100);
+      const valFixo = areaFixo * vidroObj.preco;
+      linhas.push({ nome:'Vidro fixo lateral (' + fixoLarg + 'cm)', valor:valFixo });
+      total += valFixo;
+      if (vidroObj.temperado) descontoBase += valFixo * DESCONTO_AVISTA;
+      // PU do fixo
+      const perFixo = 2*(fixoLarg/100 + alt/100);
+      const valPU = perFixo * (CFG.comercial.pu_por_m || 70);
+      linhas.push({ nome:'PU fixo lateral (' + perFixo.toFixed(1) + 'm)', valor:valPU });
+      total += valPU;
+    }
+
+    // Bandeirola
+    if (tipo === 'pivotante' && temBandeirola && bandH > 0) {
+      const areaBand = (larg/100) * (bandH/100);
+      const valBand = areaBand * vidroObj.preco;
+      linhas.push({ nome:'Bandeirola (' + bandH + 'cm)', valor:valBand });
+      total += valBand;
+      if (vidroObj.temperado) descontoBase += valBand * DESCONTO_AVISTA;
+      const perBand = 2*(larg/100 + bandH/100);
+      const valPUB = perBand * (CFG.comercial.pu_por_m || 70);
+      linhas.push({ nome:'PU bandeirola (' + perBand.toFixed(1) + 'm)', valor:valPUB });
+      total += valPUB;
+    }
   }
+  // Mola hidráulica — add-on separado do kit
+  if (tipo === 'pivotante' && temMola) {
+    linhas.push({ nome:'Mola Hidráulica (instalação)', valor: CFG.comercial.mola_hidraulica || 500 });
+    total += CFG.comercial.mola_hidraulica || 500;
+  }
+
   (ACESSORIOS_CONFIG[tipo] || []).forEach(a => {
     const ativo = accs[a.id] ?? a.obrig;
     if (!ativo) return;
