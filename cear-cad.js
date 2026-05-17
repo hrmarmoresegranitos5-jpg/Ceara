@@ -321,7 +321,7 @@ function renderMiniCAD(svgId, config) {
     arc.setAttribute('fill','none'); arc.setAttribute('stroke','rgba(255,200,80,0.25)'); arc.setAttribute('stroke-width','1.2'); arc.setAttribute('stroke-dasharray','3,2');
     svg.appendChild(arc);
     // Puxador
-    svg.appendChild(l(px+pw-4,py+ph*0.35,px+pw-4,py+ph*0.65,{stroke:C2.go,'stroke-width','2','stroke-linecap':'round'}));
+    svg.appendChild(l(px+pw-4,py+ph*0.35,px+pw-4,py+ph*0.65,{stroke:C2.go,'stroke-width':'2','stroke-linecap':'round'}));
   } else if (tipo==='correr') {
     const nF=nFolhas||2, fw=(W-M*2)/nF;
     const fixaIdx=nF===4?[0,nF-1]:[];

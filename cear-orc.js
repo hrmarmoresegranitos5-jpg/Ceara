@@ -23,10 +23,10 @@ function renderOrc(wrap) {
         { id:'2sf',  label:'2 + fixo',          fixo:'dir', band:false, folhas:2 },
       ].map(c => {
         const cur = (s.pivFolhas===c.folhas && !!s.temFixo===!!c.fixo && !!s.temBandeirola===!!c.band);
-        return \`<button class="piv-cfg-btn\${cur?' active':''}" onclick="orcSetPivConfig('\${c.id}')">
+        return `<button class="piv-cfg-btn\${cur?' active':''}" onclick="orcSetPivConfig('\${c.id}')">
           <svg id="mcad_\${c.id}" class="piv-cfg-cad" viewBox="0 0 60 44" width="60" height="44"></svg>
           <span class="piv-cfg-lbl">\${c.label}</span>
-        </button>\`;
+        </button>`;
       }).join('')}
     </div>
   ` : '';
@@ -40,13 +40,13 @@ function renderOrc(wrap) {
           const moveis = CORRER_MOVEIS[n]??n, fixas=n-moveis;
           const vpvv = moveis<=1?'VP':'VV';
           const desc = fixas>0
-            ? \`\${moveis} móve\${moveis>1?'is':'l'} + \${fixas} fixa\${fixas>1?'s':''} · \${vpvv}\`
-            : \`\${moveis} móve\${moveis>1?'is':'l'} · \${vpvv}\`;
-          return \`<button class="folha-btn\${s.folhasCorrer===n?' active':''}" onclick="orcSetFolhas(\${n})">
+            ? `\${moveis} móve\${moveis>1?'is':'l'} + \${fixas} fixa\${fixas>1?'s':''} · \${vpvv}`
+            : `\${moveis} móve\${moveis>1?'is':'l'} · \${vpvv}`;
+          return `<button class="folha-btn\${s.folhasCorrer===n?' active':''}" onclick="orcSetFolhas(\${n})">
             <span class="folha-n">\${n}</span>
             <span class="folha-lbl">\${n===1?'folha':'folhas'}</span>
             <span class="folha-desc">\${desc}</span>
-          </button>\`;
+          </button>`;
         }).join('')}
       </div>
     </div>
