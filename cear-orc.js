@@ -99,7 +99,7 @@ function orcCalcAndRender() {
     ra.innerHTML = `
       <div style="display:flex;gap:10px;margin-bottom:12px">
         <button class="btn btn-ghost btn-full" onclick="orcSalvar()">💾 Salvar</button>
-        <button class="btn btn-grn btn-full" onclick="orcWpp()">📲 WhatsApp</button>
+        <button class="btn btn-grn btn-full" onclick="orcCompartilhar()">📤 Compartilhar</button>
       </div>
     `;
   } else {
@@ -160,14 +160,21 @@ async function orcSalvar() {
   );
 }
 
-function orcWpp() {
+function orcCompartilhar() {
   if (!orcState.resultado) return;
+  showModalCompartilhar(orcState);
+}
+
+function orcWppDireto() {
   const txt = gerarTextoWpp({ cliente:orcState.cliente, tipo:orcState.tipo, larg:orcState.larg, alt:orcState.alt, vidro:orcState.vidroKey, resultado:orcState.resultado });
-  showModalWpp(txt, () => {
-    const num = orcState.fone.replace(/\D/g,'');
-    const base = num ? `https://wa.me/55${num}` : 'https://wa.me/';
-    window.open(`${base}?text=${encodeURIComponent(txt)}`, '_blank');
-    closeModal();
-  });
+  const num = (orcState.fone||'').replace(/\D/g,'');
+  const base = num ? `https://wa.me/55${num}` : 'https://wa.me/';
+  window.open(`${base}?text=${encodeURIComponent(txt)}`, '_blank');
+  closeModal();
+}
+
+function orcGerarPDF() {
+  closeModal();
+  gerarPDFOrcamento(orcState);
 }
 
