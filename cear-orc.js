@@ -296,23 +296,59 @@ function _renderItens() {
 
 // ── Ações de item ─────────────────────────────────────────────
 function orcAdicionarItem() {
-  var res=orcState.resultado;
-  if(!res||!res.total) { alert('Configure o item antes de adicionar.'); return; }
-  var desc=(TIPO_LABEL[orcState.tipo]||orcState.tipo)+' '+orcState.larg+'×'+orcState.alt+'cm';
-  var snap = JSON.parse(JSON.stringify(orcState)); // cópia completa
+  var res = orcState.resultado;
+  if (!res || !res.total) { alert('Configure o item antes de adicionar.'); return; }
+
+  var desc = (TIPO_LABEL[orcState.tipo]||orcState.tipo)+' '+orcState.larg+'×'+orcState.alt+' cm';
+  if ((orcState.qty||1) > 1) desc = orcState.qty+'× '+desc;
+  var snap = JSON.parse(JSON.stringify(orcState));
+
   if (orcEditIdx >= 0) {
-    // Atualizar item existente
     orcItens[orcEditIdx] = {snap:snap, resultado:res, qty:orcState.qty||1, desc:desc};
     orcEditIdx = -1;
   } else {
-    // Adicionar novo item
     orcItens.push({snap:snap, resultado:res, qty:orcState.qty||1, desc:desc});
   }
-  // Resetar formulário mantendo cliente/fone
-  var cliente=orcState.cliente, fone=orcState.fone;
-  orcTrocaTipo(orcState.tipo);
-  orcState.cliente=cliente; orcState.fone=fone;
+
+  // Guardar cliente/fone e limpar tudo o resto
+  var cliente = orcState.cliente;
+  var fone    = orcState.fone;
+
+  // Reset COMPLETO — dimensões vão para 0 para deixar claro que é um novo item
+  orcState.tipo            = 'pivotante';
+  orcState.larg            = 0;
+  orcState.alt             = 0;
+  orcState.km              = 0;
+  orcState.qty             = 1;
+  orcState.vidroKey        = (VIDROS_POR_TIPO['pivotante']||[])[0]||'temp_trans';
+  orcState.accs            = {};
+  orcState.resultado       = null;
+  orcState.temFixo         = false;
+  orcState.temBandeirola   = false;
+  orcState.pivFolhas       = 1;
+  orcState.molaQtd         = 0;
+  orcState.temMola         = false;
+  orcState.janelaFolhas    = 2;
+  orcState.folhasCorrer    = 2;
+  orcState.puxadoresQtd    = 1;
+  orcState.puxadoresCorrerQtd = 1;
+  orcState.kitPivotante    = 'comum';
+  orcState.kitCor          = 'branco';
+  orcState.boxTipo         = 'conv';
+  orcState.largB           = 0;
+  orcState.fixoLarg        = 40;
+  orcState.bandH           = 40;
+  orcState.cliente         = cliente;
+  orcState.fone            = fone;
+
   renderOrc(document.getElementById('pgWrap'));
+
+  // Scroll para o topo para o usuário ver o formulário limpo
+  var wrap = document.getElementById('pgWrap');
+  if (wrap) wrap.scrollTop = 0;
+
+  // Toast de confirmação
+  histMostrarToast('✅ '+desc+' adicionado ao orçamento!');
 }
 
 function orcEditarItem(idx) {
