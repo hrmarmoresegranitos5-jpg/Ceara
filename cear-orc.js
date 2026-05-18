@@ -118,61 +118,61 @@ function renderOrc(wrap) {
     </div>
   ` : '';
 
-  // ── Kit pivotante + Mola (separados, sem template literals aninhados) ──
+  // ── Kit pivotante + Mola compacta ──
   let kitBlock = '';
   if (isPiv) {
-    // Kit buttons: usar SVG containers com IDs, preenchidos após render
-    const svgComum = '<svg id="mkitComum" class="kit-cad" viewBox="0 0 50 50" width="50" height="50"></svg>';
-    const svgJumbo = '<svg id="mkitJumbo" class="kit-cad" viewBox="0 0 50 50" width="50" height="50"></svg>';
-    const svgMola  = '<svg id="mkitMola"  class="kit-cad" viewBox="0 0 50 50" width="50" height="50"></svg>';
-
-    // Build kit HTML safely
-    function _kitBtn(kitId, svg, nm, sub, desc) {
-      return '<button class="kit-btn' + (s.kitPivotante===kitId?' active':'')
-           + '" onclick="orcSetKit(\'' + kitId + '\')">'
-           + svg + '<span class="kit-nm">' + nm + '</span>'
-           + '<span class="kit-sub">' + sub + '</span>'
-           + '<span class="kit-desc">' + desc + '</span></button>';
-    }
+    const svgC = '<svg id="mkitComum" class="kit-cad" viewBox="0 0 50 50" width="44" height="44"></svg>';
+    const svgJ = '<svg id="mkitJumbo" class="kit-cad" viewBox="0 0 50 50" width="44" height="44"></svg>';
     kitBlock = '<div class="field"><label>Kit pivotante</label>'
       + '<div class="kit-opts kit-opts-kits">'
-      + _kitBtn('comum', svgComum, 'Comum',  'R$ 150', 'Padrão')
-      + _kitBtn('jumbo', svgJumbo, 'Jumbo',  'R$ 350', 'Portas grandes')
+      + '<button class="kit-btn' + (s.kitPivotante==='comum'?' active':'') + '" data-kit="comum" onclick="orcSetKit(this.dataset.kit)">'
+      + svgC + '<span class="kit-nm">Comum</span><span class="kit-sub">R$ 150</span><span class="kit-desc">Padrão</span></button>'
+      + '<button class="kit-btn' + (s.kitPivotante==='jumbo'?' active':'') + '" data-kit="jumbo" onclick="orcSetKit(this.dataset.kit)">'
+      + svgJ + '<span class="kit-nm">Jumbo</span><span class="kit-sub">R$ 350</span><span class="kit-desc">Portas grandes/pesadas</span></button>'
       + '</div></div>'
-      + '<div class="field"><label>Mola hidráulica'
-      + ' <span style="font-size:.6rem;color:var(--t4)">— instala junto com o kit</span></label>'
-      + '<button class="kit-btn kit-btn-mola' + (s.temMola?' active':'') + '"'
-      + ' onclick="orcToggleMola()" style="width:100%">'
-      + svgMola
-      + '<span class="kit-nm">' + (s.temMola?'✓ Mola Hidráulica':' Mola Hidráulica') + '</span>'
-      + '<span class="kit-sub">R$ 500</span>'
-      + '<span class="kit-desc">Fecha automático</span></button></div>';
+      + '<div class="field mola-field">'
+      + '<button class="mola-toggle' + (s.temMola?' active':'') + '" onclick="orcToggleMola()">'
+      + '<span class="mola-ic">⚙️</span>'
+      + '<div class="mola-info"><span class="mola-nm">Mola Hidráulica</span>'
+      + '<span class="mola-sub">R$ 500 · fecha automático · instala junto ao kit</span></div>'
+      + '<span class="mola-chk">' + (s.temMola?'✓':'') + '</span>'
+      + '</button></div>';
   }
 
-
-  // Acessórios: para pivotante, mostra só puxador e fixador (kit já está no kitBlock)
+  // Acessórios
   let accsBlock = '';
   if (!isCorrer) {
-    // Pivotante: só puxador e fixador (kit tratado acima, contra fechadura abaixo)
+    const is2Folhas = isPiv && (s.pivFolhas||1) === 2;
+    const puxQtd = is2Folhas ? (s.puxadoresQtd||1) : 1;
+    const puxAtivo = !!(s.accs && s.accs.puxador);
+
     const pivAccs = [
-      { id:'puxador', nome:'Puxador',  preco:100, obrig:false },
-      { id:'fixador', nome:'Fixador',  preco:60,  obrig:false },
+      { id:'puxador', nome:'Puxador', preco:100, obrig:false },
+      { id:'fixador', nome:'Fixador', preco:60,  obrig:false },
     ];
-    if (isPiv && (s.pivFolhas||1) === 2) {
-      pivAccs.push({ id:'contra', nome:'Contra fechadura (2 folhas)', preco:50, obrig:true });
-    }
+    if (is2Folhas) pivAccs.push({ id:'contra', nome:'Contra fechadura', preco:50, obrig:true });
     const visAcc = isPiv ? pivAccs : accConfig;
-    if (visAcc.length) {
-      let ah = '<div class="section" style="margin-bottom:14px"><div class="section-ttl">Acessórios</div><div class="orc-accs" id="orcAccs">';
-      visAcc.forEach(a => {
-        const ativo = s.accs[a.id] ?? a.obrig;
-        ah += '<button class="orc-acc-btn' + (ativo?' on':'') + (a.obrig?' obrig':'') + '"'
-           + ' onclick="orcToggleAcc(\'' + a.id + '\',' + a.obrig + ')">'
-           + (ativo?'✓':'+') + ' ' + a.nome + (a.preco ? ' (' + formatBRL(a.preco) + ')' : '') + '</button>';
-      });
-      ah += '</div></div>';
-      accsBlock = ah;
+
+    let ah = '<div class="section" style="margin-bottom:14px"><div class="section-ttl">Acessórios</div>'
+           + '<div class="orc-accs" id="orcAccs">';
+    visAcc.forEach(a => {
+      const ativo = !!(s.accs[a.id] ?? a.obrig);
+      ah += '<button class="orc-acc-btn' + (ativo?' on':'') + (a.obrig?' obrig':'') + '"'
+         + ' data-aid="' + a.id + '" data-obr="' + a.obrig + '" onclick="orcToggleAcc(this.dataset.aid,this.dataset.obr==\'true\')">'
+         + (ativo?'✓':'+') + ' ' + a.nome + (a.preco ? ' (' + formatBRL(a.preco) + ')' : '') + '</button>';
+    });
+    ah += '</div>';
+
+    // Quantidade de puxadores (só em 2 folhas com puxador ativado)
+    if (is2Folhas && puxAtivo) {
+      ah += '<div class="pux-qty-row">'
+         + '<span class="pux-qty-lbl">Quantidade:</span>'
+         + '<button class="pux-qty-btn' + (puxQtd===1?' active':'') + '" data-q="1" onclick="orcSetPuxQtd(+this.dataset.q)">1 puxador · R$ 100</button>'
+         + '<button class="pux-qty-btn' + (puxQtd===2?' active':'') + '" data-q="2" onclick="orcSetPuxQtd(+this.dataset.q)">2 puxadores · R$ 200</button>'
+         + '</div>';
     }
+    ah += '</div>';
+    accsBlock = ah;
   }
 
   wrap.innerHTML = `
@@ -253,6 +253,7 @@ function orcSetPivConfig(id) {
   if (!c) return;
   orcState.pivFolhas      = c.folhas;
   orcState.accs           = {}; // reset ao trocar config
+  orcState.puxadoresQtd   = 1;
   orcState.temFixo        = c.fixo;
   orcState.temBandeirola  = c.band;
   orcState.fixoLado       = c.fixoLado;
@@ -272,13 +273,18 @@ function orcSetFolhas(n) {
 }
 
 function orcSetKit(id) {
-  orcState.kitPivotante = id;
+  id = id || 'comum'; orcState.kitPivotante = id;
   _orcRefreshCAD();
   orcCalcAndRender();
   // Re-render kit buttons
   document.querySelectorAll('.kit-btn:not(.kit-btn-mola)').forEach(b => {
     b.classList.toggle('active', b.onclick && b.onclick.toString().includes("'" + id + "'"));
   });
+}
+
+function orcSetPuxQtd(n) {
+  orcState.puxadoresQtd = n;
+  renderOrc(document.getElementById('pgWrap'));
 }
 
 function orcToggleMola() {
@@ -379,6 +385,7 @@ function orcTrocaTipo(tipo) {
   orcState.pivFolhas      = 1;
   orcState.temMola        = false;
   orcState.janelaFolhas   = 2;
+  orcState.puxadoresQtd   = 1;
   if (tipo==='correr') orcState.folhasCorrer = 2;
   renderOrc(document.getElementById('pgWrap'));
 }

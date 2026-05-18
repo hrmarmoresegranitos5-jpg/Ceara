@@ -163,7 +163,7 @@ let orcState = {
   tipo:'pivotante', larg:90, alt:210,
   vidroKey:'temp_trans', accs:{}, km:0,
   cliente:'', fone:'',
-  resultado:null, folhasCorrer:2, janelaFolhas:2, puxadorCorrer:false,
+  resultado:null, folhasCorrer:2, janelaFolhas:2, puxadorCorrer:false, puxadoresQtd:1,
 };
 
 // Declara os globais que loadCFG vai preencher

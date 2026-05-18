@@ -1064,6 +1064,43 @@ input[type=date] { color-scheme:dark; }
 /* Kit CAD drawings */
 .kit-cad { display: block; margin: 0 auto 4px; }
 .kit-opts-kits .kit-btn { min-height: 90px; }
+
+/* Mola toggle */
+.mola-field { padding: 0; }
+.mola-toggle {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: rgba(255,255,255,.05);
+  border: 1.5px solid rgba(255,255,255,.1); border-radius: 12px;
+  cursor: pointer; font-family: inherit; text-align: left;
+  transition: all .15s;
+}
+.mola-toggle.active {
+  background: rgba(201,168,76,.1); border-color: rgba(201,168,76,.45);
+}
+.mola-ic { font-size: 1.3rem; flex-shrink: 0; }
+.mola-info { flex: 1; }
+.mola-nm { display: block; font-size: .8rem; font-weight: 700; color: var(--tx,#f0f0f0); }
+.mola-sub { display: block; font-size: .62rem; color: var(--t4,#888); margin-top: 2px; }
+.mola-chk { font-size: 1rem; color: #C9A84C; font-weight: 700; flex-shrink: 0; min-width: 16px; }
+.mola-toggle.active .mola-nm { color: #C9A84C; }
+
+/* Puxador qty selector */
+.pux-qty-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px 10px; background: rgba(255,255,255,.03);
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+.pux-qty-lbl { font-size: .62rem; color: var(--t4,#888); white-space: nowrap; }
+.pux-qty-btn {
+  flex: 1; padding: 7px 6px; font-size: .68rem; font-weight: 600;
+  background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.1);
+  border-radius: 8px; color: var(--t3,#aaa); cursor: pointer; font-family: inherit;
+  transition: all .15s;
+}
+.pux-qty-btn.active {
+  background: rgba(100,200,255,.12); border-color: rgba(100,200,255,.45); color: rgba(150,220,255,.9);
+}
+
 </style>
 </head>
 <body>
