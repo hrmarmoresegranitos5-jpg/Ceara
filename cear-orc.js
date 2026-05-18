@@ -92,13 +92,13 @@ function renderOrc(wrap) {
     const moveis2 = nFj===2?1:2, fixas2 = nFj===2?1:2;
     janelaInfo = '<div class="field" style="margin-bottom:14px"><label>Número de folhas</label>'
       + '<div class="correr-folhas">'
-      + '<button class="folha-btn' + (nFj===2?' active':'') + '" data-n="2" onclick="orcSetJanelaFolhas(+this.dataset.n)">'
+      + '<button class="folha-btn' + (nFj===2?' active':'') + '" data-jfolhas="2">'
       + '<span class="folha-n">2</span><span class="folha-lbl">folhas</span>'
       + '<span class="folha-desc">1 fixa · 1 móvel · VP</span></button>'
-      + '<button class="folha-btn' + (nFj===3?' active':'') + '" data-n="3" onclick="orcSetJanelaFolhas(+this.dataset.n)">'
+      + '<button class="folha-btn' + (nFj===3?' active':'') + '" data-jfolhas="3">'
       + '<span class="folha-n">3</span><span class="folha-lbl">folhas</span>'
       + '<span class="folha-desc">1 fixa · 2 móveis · VV</span></button>'
-      + '<button class="folha-btn' + (nFj===4?' active':'') + '" data-n="4" onclick="orcSetJanelaFolhas(+this.dataset.n)">'
+      + '<button class="folha-btn' + (nFj===4?' active':'') + '" data-jfolhas="4">'
       + '<span class="folha-n">4</span><span class="folha-lbl">folhas</span>'
       + '<span class="folha-desc">2 fixas · 2 móveis · VV</span></button>'
       + '</div></div>';
@@ -128,13 +128,13 @@ function renderOrc(wrap) {
     const svgJ = '<svg id="mkitJumbo" class="kit-cad" viewBox="0 0 50 50" width="44" height="44"></svg>';
     kitBlock = '<div class="field"><label>Kit pivotante</label>'
       + '<div class="kit-opts kit-opts-kits">'
-      + '<button class="kit-btn' + (s.kitPivotante==='comum'?' active':'') + '" data-kit="comum" onclick="orcSetKit(this.dataset.kit)">'
+      + '<button class="kit-btn' + (s.kitPivotante==='comum'?' active':'') + '" data-kit="comum">'
       + svgC + '<span class="kit-nm">Comum</span><span class="kit-sub">R$ 150</span><span class="kit-desc">Padrão</span></button>'
-      + '<button class="kit-btn' + (s.kitPivotante==='jumbo'?' active':'') + '" data-kit="jumbo" onclick="orcSetKit(this.dataset.kit)">'
+      + '<button class="kit-btn' + (s.kitPivotante==='jumbo'?' active':'') + '" data-kit="jumbo">'
       + svgJ + '<span class="kit-nm">Jumbo</span><span class="kit-sub">R$ 350</span><span class="kit-desc">Portas grandes/pesadas</span></button>'
       + '</div></div>'
       + '<div class="field mola-field">'
-      + '<button class="mola-toggle' + (s.temMola?' active':'') + '" onclick="orcToggleMola()">'
+      + '<button class="mola-toggle' + (s.temMola?' active':'') + '" id="molaBtnOrc">'
       + '<span class="mola-ic">⚙️</span>'
       + '<div class="mola-info"><span class="mola-nm">Mola Hidráulica</span>'
       + '<span class="mola-sub">R$ 500 · fecha automático · instala junto ao kit</span></div>'
@@ -170,8 +170,8 @@ function renderOrc(wrap) {
     if (is2Folhas && puxAtivo) {
       ah += '<div class="pux-qty-row">'
          + '<span class="pux-qty-lbl">Quantidade:</span>'
-         + '<button class="pux-qty-btn' + (puxQtd===1?' active':'') + '" data-q="1" onclick="orcSetPuxQtd(+this.dataset.q)">1 puxador · R$ 100</button>'
-         + '<button class="pux-qty-btn' + (puxQtd===2?' active':'') + '" data-q="2" onclick="orcSetPuxQtd(+this.dataset.q)">2 puxadores · R$ 200</button>'
+         + '<button class="pux-qty-btn' + (puxQtd===1?' active':'') + '" data-puxqtd="1">1 puxador · R$ 100</button>'
+         + '<button class="pux-qty-btn' + (puxQtd===2?' active':'') + '" data-puxqtd="2">2 puxadores · R$ 200</button>'
          + '</div>';
     }
     ah += '</div>';
@@ -239,6 +239,34 @@ function renderOrc(wrap) {
   orcCalcAndRender();
   // Render mini-CADs do seletor pivotante
   if (isPiv) { _renderMiniCADs(); _renderMiniKitCADs(); }
+  // Bind interactive buttons (evita problemas com inline onclick)
+  _bindOrcButtons();
+}
+
+function _bindOrcButtons() {
+  // Kit pivotante
+  document.querySelectorAll('[data-kit]').forEach(function(btn) {
+    btn.addEventListener('click', function() { orcSetKit(this.dataset.kit); });
+  });
+  // Mola hidráulica
+  var molaBtn = document.getElementById('molaBtnOrc');
+  if (molaBtn) molaBtn.addEventListener('click', orcToggleMola);
+  // Puxador quantidade
+  document.querySelectorAll('[data-puxqtd]').forEach(function(btn) {
+    btn.addEventListener('click', function() { orcSetPuxQtd(+this.dataset.puxqtd); });
+  });
+  // Folhas correr
+  document.querySelectorAll('[data-folhas]').forEach(function(btn) {
+    btn.addEventListener('click', function() { orcSetFolhas(+this.dataset.folhas); });
+  });
+  // Folhas janela
+  document.querySelectorAll('[data-jfolhas]').forEach(function(btn) {
+    btn.addEventListener('click', function() { orcSetJanelaFolhas(+this.dataset.jfolhas); });
+  });
+  // Config pivotante
+  document.querySelectorAll('[data-pivcfg]').forEach(function(btn) {
+    btn.addEventListener('click', function() { orcSetPivConfig(this.dataset.pivcfg); });
+  });
 }
 
 // Configs pivotante
