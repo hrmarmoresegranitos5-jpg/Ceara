@@ -168,6 +168,7 @@ function renderOrc(wrap) {
     : '';
 
   // ── Kit pivotante + Mola ──
+  const nFolhasPiv = isPiv ? (s.pivFolhas||1) : 1;
   let kitBlock = '';
   if (isPiv) {
     kitBlock = '<div class="field"><label>Kit pivotante</label>'
@@ -306,7 +307,7 @@ function orcSetKit(id)         { orcState.kitPivotante = id; renderOrc(document.
 function orcSetPuxQtd(n)       { orcState.puxadoresQtd = n; renderOrc(document.getElementById('pgWrap')); }
 function orcSetMola(n)         { orcState.molaQtd = n; orcState.temMola = n>0; renderOrc(document.getElementById('pgWrap')); }
 function orcToggleMola()       { orcState.molaQtd = orcState.molaQtd>0?0:1; orcState.temMola = orcState.molaQtd>0; renderOrc(document.getElementById('pgWrap')); }
-function orcSetPuxCorrer(n)    { orcState.puxadoresCorrerQtd = n; orcCalcAndRender(); }
+function orcSetPuxCorrer(n)    { orcState.puxadoresCorrerQtd = n; renderOrc(document.getElementById('pgWrap')); }
 function orcSetBoxTipo(i)      {
   const bts=['fixo','conv','3p','4p','canto'];
   orcState.boxTipo = bts[i]||'conv';
