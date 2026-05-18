@@ -43,12 +43,13 @@ function renderOrc(wrap) {
   // ── Seletor configuração pivotante (6 mini-desenhos) ──
   let pivConfig = '';
   if (isPiv) {
+    // Ícones de configuração sem SVG (mais limpo)
+    const _icons = ['🚪','🚪▐','▬🚪','▬🚪▐','🚪🚪','🚪🚪▐'];
     let btns = '';
     _ORC.pivCfgs.forEach(function(id, i) {
       const c = PIV_CONFIGS[id];
       const cur = (s.pivFolhas===c.folhas && !!s.temFixo===c.fixo && !!s.temBandeirola===c.band);
       btns += '<button class="piv-cfg-btn' + (cur?' active':'') + '" onclick="_setPivCfg(' + i + ')">'
-        + '<svg id="mcad_' + id + '" class="piv-cfg-cad" viewBox="0 0 60 44" width="60" height="44"></svg>'
         + '<span class="piv-cfg-lbl">' + _ORC.pivLabels[i] + '</span>'
         + '</button>';
     });
@@ -124,14 +125,12 @@ function renderOrc(wrap) {
   // ── Kit pivotante + Mola ──
   let kitBlock = '';
   if (isPiv) {
-    const svgC = '<svg id="mkitComum" viewBox="0 0 50 50" width="44" height="44"></svg>';
-    const svgJ = '<svg id="mkitJumbo" viewBox="0 0 50 50" width="44" height="44"></svg>';
     kitBlock = '<div class="field"><label>Kit pivotante</label>'
       + '<div class="kit-opts kit-opts-kits">'
       + '<button class="kit-btn'+(s.kitPivotante==='comum'?' active':'')+'" onclick="_setKit(0)">'
-        + svgC+'<span class="kit-nm">Comum</span><span class="kit-sub">R$ 150</span><span class="kit-desc">Padrão</span></button>'
+        +'<span class="kit-nm">Comum</span><span class="kit-sub">R$ 150</span><span class="kit-desc">Padrão</span></button>'
       + '<button class="kit-btn'+(s.kitPivotante==='jumbo'?' active':'')+'" onclick="_setKit(1)">'
-        + svgJ+'<span class="kit-nm">Jumbo</span><span class="kit-sub">R$ 350</span><span class="kit-desc">Portas grandes</span></button>'
+        +'<span class="kit-nm">Jumbo</span><span class="kit-sub">R$ 350</span><span class="kit-desc">Portas grandes</span></button>'
       + '</div></div>'
       + '<div class="field mola-field">'
       + '<button class="mola-toggle'+(s.temMola?' active':'')+'" onclick="orcToggleMola()">'
@@ -191,7 +190,6 @@ function renderOrc(wrap) {
   // ── Montar HTML ──
   wrap.innerHTML = '<div id="pgOrcamento">'
     + tipoBlock
-    + '<svg id="orcCAD" class="orc-cad" viewBox="0 0 320 220"></svg>'
     + pivConfig
     + folhasBlock
     + janelaBlock
@@ -217,9 +215,7 @@ function renderOrc(wrap) {
     + '<div style="height:88px"></div>'
     + '</div>';
 
-  _orcRefreshCAD();
   orcCalcAndRender();
-  if (isPiv) { _renderMiniCADs(); _renderMiniKitCADs(); }
 }
 
 // ── Configs pivotante ──────────────────────────────────────────
@@ -309,7 +305,6 @@ function orcUpdate() {
   s.fone    = document.getElementById('orcFone')?.value||'';
   if (s.temFixo)       s.fixoLarg = parseFloat(document.getElementById('orcFixoLarg')?.value)||40;
   if (s.temBandeirola) s.bandH    = parseFloat(document.getElementById('orcBandH')?.value)||40;
-  _orcRefreshCAD();
   orcCalcAndRender();
 }
 
