@@ -129,6 +129,13 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
       descontoBase += 60;
     }
 
+    // Ferrolho — obrigatório em 2 folhas (2 unidades)
+    if ((pivFolhas||1) === 2) {
+      linhas.push({ nome: 'Ferrolho (2×)', valor: 120 });
+      total += 120;
+      descontoBase += 120;
+    }
+
     // Contra fechadura (2 folhas)
     if ((pivFolhas||1) === 2) {
       linhas.push({ nome: 'Contra fechadura', valor: 50 });

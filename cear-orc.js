@@ -283,7 +283,10 @@ function _getVisAcc() {
       { id:'puxador', nome:'Puxador',  preco:100, obrig:false },
       { id:'fixador', nome:'Fixador',  preco:60,  obrig:false },
     ];
-    if ((s.pivFolhas||1)===2) list.push({ id:'contra', nome:'Contra fechadura', preco:50, obrig:true });
+    if ((s.pivFolhas||1)===2) {
+      list.push({ id:'contra',   nome:'Contra fechadura', preco:50, obrig:true  });
+      list.push({ id:'ferrolho', nome:'Ferrolho (2×)',    preco:120, obrig:true  });
+    }
     return list;
   }
   if (isCorrer) return [];
