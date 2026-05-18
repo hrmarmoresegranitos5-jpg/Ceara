@@ -105,7 +105,7 @@ function resetCFG() {
 }
 
 // ── Estruturas estáticas (não configuráveis) ──────────────────
-const CORRER_MOVEIS = { 1:1, 2:2, 4:2 };
+const CORRER_MOVEIS = { 1:1, 2:2, 3:2, 4:2 }; // 3 folhas = 1 fixa + 2 móveis
 
 const ACESSORIOS_CONFIG = {
   pivotante:  [{ id:'kit',      nome:'Kit Pivotante',        preco:150, obrig:true  },

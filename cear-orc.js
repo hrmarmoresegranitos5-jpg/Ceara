@@ -45,17 +45,17 @@ function renderOrc(wrap) {
     <div class="field" style="margin-bottom:14px">
       <label>Número de folhas</label>
       <div class="correr-folhas" id="correrFolhas">
-        ${[1,2,4].map(n => {
+        ${[1,2,3,4].map(n => {
           const moveis = CORRER_MOVEIS[n]??n, fixas=n-moveis;
           const vpvv = moveis<=1?'VP':'VV';
           const desc = fixas>0
-            ? `${moveis} móve${moveis>1?'is':'l'} + ${fixas} fixa${fixas>1?'s':''} · ${vpvv}`
-            : `${moveis} móve${moveis>1?'is':'l'} · ${vpvv}`;
-          return `<button class="folha-btn${s.folhasCorrer===n?' active':''}" onclick="orcSetFolhas(${n})">
-            <span class="folha-n">${n}</span>
-            <span class="folha-lbl">${n===1?'folha':'folhas'}</span>
-            <span class="folha-desc">${desc}</span>
-          </button>`;
+            ? moveis + ' móve'+(moveis>1?'is':'l')+' + '+fixas+' fixa'+(fixas>1?'s':'')+' · '+vpvv
+            : moveis + ' móve'+(moveis>1?'is':'l')+' · '+vpvv;
+          return '<button class="folha-btn'+(s.folhasCorrer===n?' active':'')+'" onclick="orcSetFolhas('+n+')">'
+            + '<span class="folha-n">'+n+'</span>'
+            + '<span class="folha-lbl">'+(n===1?'folha':'folhas')+'</span>'
+            + '<span class="folha-desc">'+desc+'</span>'
+            + '</button>';
         }).join('')}
       </div>
     </div>
@@ -92,10 +92,13 @@ function renderOrc(wrap) {
     const moveis2 = nFj===2?1:2, fixas2 = nFj===2?1:2;
     janelaInfo = '<div class="field" style="margin-bottom:14px"><label>Número de folhas</label>'
       + '<div class="correr-folhas">'
-      + '<button class="folha-btn' + (nFj===2?' active':'') + '" onclick="orcSetJanelaFolhas(2)">'
+      + '<button class="folha-btn' + (nFj===2?' active':'') + '" data-n="2" onclick="orcSetJanelaFolhas(+this.dataset.n)">'
       + '<span class="folha-n">2</span><span class="folha-lbl">folhas</span>'
       + '<span class="folha-desc">1 fixa · 1 móvel · VP</span></button>'
-      + '<button class="folha-btn' + (nFj===4?' active':'') + '" onclick="orcSetJanelaFolhas(4)">'
+      + '<button class="folha-btn' + (nFj===3?' active':'') + '" data-n="3" onclick="orcSetJanelaFolhas(+this.dataset.n)">'
+      + '<span class="folha-n">3</span><span class="folha-lbl">folhas</span>'
+      + '<span class="folha-desc">1 fixa · 2 móveis · VV</span></button>'
+      + '<button class="folha-btn' + (nFj===4?' active':'') + '" data-n="4" onclick="orcSetJanelaFolhas(+this.dataset.n)">'
       + '<span class="folha-n">4</span><span class="folha-lbl">folhas</span>'
       + '<span class="folha-desc">2 fixas · 2 móveis · VV</span></button>'
       + '</div></div>';
@@ -273,13 +276,8 @@ function orcSetFolhas(n) {
 }
 
 function orcSetKit(id) {
-  id = id || 'comum'; orcState.kitPivotante = id;
-  _orcRefreshCAD();
-  orcCalcAndRender();
-  // Re-render kit buttons
-  document.querySelectorAll('.kit-btn:not(.kit-btn-mola)').forEach(b => {
-    b.classList.toggle('active', b.onclick && b.onclick.toString().includes("'" + id + "'"));
-  });
+  orcState.kitPivotante = id || 'comum';
+  renderOrc(document.getElementById('pgWrap'));
 }
 
 function orcSetPuxQtd(n) {
@@ -289,12 +287,7 @@ function orcSetPuxQtd(n) {
 
 function orcToggleMola() {
   orcState.temMola = !orcState.temMola;
-  const btn = document.querySelector('.kit-btn-mola');
-  if (btn) {
-    btn.classList.toggle('active', orcState.temMola);
-    btn.querySelector('.kit-nm').textContent = orcState.temMola ? '✓ Mola Hidráulica' : '+ Mola Hidráulica';
-  }
-  orcCalcAndRender();
+  renderOrc(document.getElementById('pgWrap'));
 }
 
 function _orcRefreshCAD() {

@@ -265,7 +265,7 @@ function renderCAD(svgEl, state) {
 
   } else if (tipo === 'janela') {
     const nFj = state.janelaFolhas || (larg <= 120 ? 2 : 4);
-    const fixaJ = nFj===4 ? [0, nFj-1] : [];
+    const fixaJ = nFj===4 ? [0, nFj-1] : nFj===3 ? [0] : [0];
     const fw2 = Math.round(pw / nFj);
     const vpvv2 = nFj===2 ? 'VP' : 'VV';
 
