@@ -6,62 +6,117 @@ function formatBRL(v) {
   return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits:2 });
 }
 
-function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, pivFolhas, kitPivotante, temFixo, fixoLarg, temBandeirola, bandH, temMola, puxadoresQtd, janelaFolhas }) {
+function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, pivFolhas, kitPivotante, temFixo, fixoLarg, temBandeirola, bandH, temMola, puxadoresQtd, janelaFolhas, kitCor }) {
   if (!larg || !alt || isNaN(larg) || isNaN(alt)) return null;
   const linhas = []; let total = 0, descontoBase = 0;
   const area = (larg/100)*(alt/100);
   const vidroObj = VIDROS[vidro];
 
-  // ── PORTA DE CORRER — lógica dedicada ──────────────────────
+  // ── PORTA DE CORRER — kit engenharia por m² ───────────────
   if (tipo === 'correr') {
-    const nFolhas  = Number(folhasCorrer) || 2;          // total de folhas
-    const nMoveis  = CORRER_MOVEIS[nFolhas] ?? 2;        // folhas móveis
-    const nFixas   = nFolhas - nMoveis;                  // folhas fixas
-    const largM    = larg / 100;                         // largura em metros
+    const nFolhas = Number(folhasCorrer) || 2;
+    const nMoveis = CORRER_MOVEIS[nFolhas] ?? 2;
+    const nFixas  = nFolhas - nMoveis;
+    const co      = CFG.comercial;
+    const isPreto = kitCor === 'preto';
 
-    // Vidro — área total (todas as folhas)
+    // Vidro
     if (vidroObj) {
       const valVidro = area * vidroObj.preco;
-      linhas.push({ nome:`Vidro ${vidroObj.nome} (${nFolhas} folha${nFolhas>1?'s':''})`, valor:valVidro });
+      linhas.push({ nome: 'Vidro ' + vidroObj.nome, valor: valVidro });
       total += valVidro;
-      if (vidroObj.temperado) descontoBase += valVidro * DESCONTO_AVISTA;
+      if (vidroObj.temperado) descontoBase += valVidro;
     }
 
-    // Trilho superior
-    const valTrilhoSup = largM * CORRER_PRECOS.trilho_sup;
-    linhas.push({ nome:`Trilho superior (${larg} cm)`, valor:valTrilhoSup });
-    total += valTrilhoSup;
+    // Kit engenharia (alumínios + trilhos + perfis)
+    // +R$10/m² quando há 2 móveis (cadeirinha no encontro)
+    const kitM2 = (isPreto ? co.kit_eng_preto : co.kit_eng_branco)
+                + (nMoveis >= 2 ? co.kit_eng_extra : 0);
+    const valKit = area * kitM2;
+    linhas.push({ nome: 'Kit engenharia ' + (isPreto?'preto':'branco')
+                + (nMoveis>=2?' (+R$'+co.kit_eng_extra+'/m² cadeirinha)':'')
+                + ' (' + kitM2 + '/m²)', valor: valKit });
+    total += valKit;
 
-    // Guia inferior
-    const valGuiaInf = largM * CORRER_PRECOS.guia_inf;
-    linhas.push({ nome:`Guia inferior (${larg} cm)`, valor:valGuiaInf });
-    total += valGuiaInf;
+    // Roldanas: 2 por folha móvel
+    const nRoldanas = nMoveis * 2;
+    const valRoldanas = nRoldanas * co.roldana;
+    linhas.push({ nome: 'Roldanas ×' + nRoldanas, valor: valRoldanas });
+    total += valRoldanas;
 
-    // Kits de carrinho (por folha móvel)
-    const valKits = nMoveis * CORRER_PRECOS.kit_carrinho;
-    linhas.push({ nome:`Kit carrinho ×${nMoveis} (folha${nMoveis>1?'s móveis':' móvel'})`, valor:valKits });
-    total += valKits;
+    // Fechadura VP ou VV
+    const vpvv   = nMoveis <= 1 ? 'VP' : 'VV';
+    const fPreco = nMoveis <= 1 ? CFG.correr.fechadura : (CFG.acessorios?.fechadura_vv || 180);
+    linhas.push({ nome: 'Fechadura ' + vpvv, valor: fPreco });
+    total += fPreco;
+    descontoBase += fPreco;
 
-    // Fechadura (por folha móvel)
-    const valFechadura = nMoveis * CORRER_PRECOS.fechadura;
-    linhas.push({ nome:`Fechadura VP ×${nMoveis}`, valor:valFechadura });
-    total += valFechadura;
-
-    // Puxador (por folha móvel, se ativado)
+    // Puxador (opcional, 1 ou 2)
     if (accs && accs.puxador) {
-      const valPuxador = nMoveis * CORRER_PRECOS.puxador;
-      linhas.push({ nome:'Puxador ×'+nMoveis, valor:valPuxador });
-      total += valPuxador;
+      const nPux = Number(puxadoresQtd) || 1;
+      const valPux = nPux * 100;
+      linhas.push({ nome: 'Puxador ×' + nPux, valor: valPux });
+      total += valPux;
+      descontoBase += valPux;
     }
 
     // Frete
     const kmNum = parseFloat(km) || 0;
     let frete = 0;
-    if (kmNum > FRETE_GRATIS_KM) frete = (kmNum - FRETE_GRATIS_KM) * FRETE_POR_KM_EXTRA;
-    linhas.push({ nome:`Frete (${kmNum} km)`, valor:frete });
+    if (kmNum > FRETE_GRATIS_KM) frete = (kmNum-FRETE_GRATIS_KM) * FRETE_POR_KM_EXTRA;
+    linhas.push({ nome: 'Frete (' + kmNum + ' km)', valor: frete });
     total += frete;
 
-    return { linhas, total, totalAvista: total - descontoBase, nFolhas, nMoveis, nFixas };
+    const totalAvista = total - (descontoBase * DESCONTO_AVISTA);
+    return { linhas, total, totalAvista, nFolhas, nMoveis, nFixas };
+  }
+
+  // ── JANELA — kit engenharia por m² ─────────────────────────
+  if (tipo === 'janela') {
+    const nFj    = Number(janelaFolhas) || (larg<=120?2:4);
+    const nMj    = nFj===4?2:1;
+    const co     = CFG.comercial;
+    const isPreto= kitCor === 'preto';
+
+    // Vidro
+    if (vidroObj) {
+      const valVidro = area * vidroObj.preco;
+      linhas.push({ nome: 'Vidro ' + vidroObj.nome, valor: valVidro });
+      total += valVidro;
+      if (vidroObj.temperado) descontoBase += valVidro;
+    }
+
+    // Kit engenharia (+R$10/m² em 4 folhas)
+    const kitM2j = (isPreto ? co.kit_eng_preto : co.kit_eng_branco)
+                 + (nFj === 4 ? co.kit_eng_extra : 0);
+    const valKitJ = area * kitM2j;
+    linhas.push({ nome: 'Kit engenharia ' + (isPreto?'preto':'branco')
+                + (nFj===4?' (+R$'+co.kit_eng_extra+'/m² 4 folhas)':'')
+                + ' (' + kitM2j + '/m²)', valor: valKitJ });
+    total += valKitJ;
+
+    // Roldanas: 2 por folha móvel
+    const nRolJ = nMj * 2;
+    const valRolJ = nRolJ * co.roldana;
+    linhas.push({ nome: 'Roldanas ×' + nRolJ, valor: valRolJ });
+    total += valRolJ;
+
+    // Bate-fecha VP ou VV
+    const bfPreco = nFj===4 ? (CFG.acessorios?.bate_vv||80) : (CFG.acessorios?.bate_vp||50);
+    const bfNome  = nFj===4 ? 'Bate-fecha VV' : 'Bate-fecha VP';
+    linhas.push({ nome: bfNome, valor: bfPreco });
+    total += bfPreco;
+    descontoBase += bfPreco;
+
+    // Frete
+    const kmNumJ = parseFloat(km) || 0;
+    let freteJ = 0;
+    if (kmNumJ > FRETE_GRATIS_KM) freteJ = (kmNumJ-FRETE_GRATIS_KM) * FRETE_POR_KM_EXTRA;
+    linhas.push({ nome: 'Frete (' + kmNumJ + ' km)', valor: freteJ });
+    total += freteJ;
+
+    const totalAvistaJ = total - (descontoBase * DESCONTO_AVISTA);
+    return { linhas, total, totalAvista: totalAvistaJ };
   }
 
   // ── DEMAIS TIPOS ────────────────────────────────────────────
@@ -150,7 +205,16 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
       if (a.preco !== null && a.preco !== undefined) { val = a.preco; }
       else {
         if (tipo === 'janela')  val = (larg/100) * 100;
-        if (tipo === 'box')     val = area * 120;
+        if (tipo === 'box') {
+          // Box: kit engenharia + 4 roldanas
+          const coB = CFG.comercial;
+          const isPretoB = kitCor==='preto';
+          const kitM2B = isPretoB ? coB.kit_eng_preto : coB.kit_eng_branco;
+          val = area * kitM2B;
+          // Roldanas 4x
+          const rolBox = 4 * coB.roldana;
+          linhas.push({ nome:'Roldanas ×4', valor:rolBox }); total+=rolBox;
+        }
         if (tipo === 'espelho' && a.id === 'botoes') val = larg >= 60 ? 4*15 : 0;
         if (tipo === 'comum'   && a.id === 'recorte') val = area * 10;
       }

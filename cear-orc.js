@@ -4,6 +4,7 @@
 
 // Tabelas globais de lookup (evita problemas de escape em onclick)
 var _ORC = {
+  kitCores: ['branco','preto'],
   pivCfgs:  ['1s','1sf','1sb','1sfb','2s','2sf'],
   kits:     ['comum','jumbo'],
   folhas:   [1,2,3,4],
@@ -18,6 +19,7 @@ function _setKit(i)       { orcSetKit(_ORC.kits[i]); }
 function _setFolhas(i)    { orcSetFolhas(_ORC.folhas[i]); }
 function _setJFolhas(i)   { orcSetJanelaFolhas(_ORC.jFolhas[i]); }
 function _setPuxQtd(i)    { orcSetPuxQtd(_ORC.puxQtd[i]); }
+function _setKitCor(i)    { orcSetKitCor(_ORC.kitCores[i]); }
 function _togAcc(id)      { orcToggleAcc(id, false); }
 function _togAccObr(id)   { orcToggleAcc(id, true); }
 
@@ -96,6 +98,19 @@ function renderOrc(wrap) {
     });
     janelaBlock = '<div class="field" style="margin-bottom:14px"><label>Número de folhas</label>'
       + '<div class="correr-folhas">'+btns+'</div></div>';
+  }
+
+  // ── Seletor cor do kit engenharia (correr/janela) ──
+  let kitCorBlock = '';
+  if (isCorrer || isJanela) {
+    const kc = s.kitCor||'branco';
+    kitCorBlock = '<div class="field"><label>Kit engenharia</label>'
+      + '<div class="kit-opts">'
+      + '<button class="kit-btn'+(kc==='branco'?' active':'')+'" onclick="orcSetKitCor(0)">'
+      + '<span class="kit-nm">Branco</span><span class="kit-sub">R$ 120/m²</span><span class="kit-desc">Padrão</span></button>'
+      + '<button class="kit-btn'+(kc==='preto'?' active':'')+'" onclick="orcSetKitCor(1)">'
+      + '<span class="kit-nm">Preto</span><span class="kit-sub">R$ 130/m²</span><span class="kit-desc">Premium</span></button>'
+      + '</div></div>';
   }
 
   // ── Badge info correr ──
@@ -194,6 +209,7 @@ function renderOrc(wrap) {
     + pivConfig
     + folhasBlock
     + janelaBlock
+    + kitCorBlock
     + correrBadge
     + '<div class="campo-row">'
     + '<div class="field"><label>Largura (cm)</label><input id="orcLarg" type="number" inputmode="numeric" value="'+s.larg+'" oninput="orcUpdate()"></div>'
@@ -244,6 +260,7 @@ function orcSetPivConfig(id) {
 
 function orcSetJanelaFolhas(n) { orcState.janelaFolhas = n; renderOrc(document.getElementById('pgWrap')); }
 function orcSetFolhas(n)       { orcState.folhasCorrer = n; renderOrc(document.getElementById('pgWrap')); }
+function orcSetKitCor(id)      { orcState.kitCor = id; renderOrc(document.getElementById('pgWrap')); }
 function orcSetKit(id)         { orcState.kitPivotante = id; renderOrc(document.getElementById('pgWrap')); }
 function orcSetPuxQtd(n)       { orcState.puxadoresQtd = n; renderOrc(document.getElementById('pgWrap')); }
 function orcToggleMola()       { orcState.temMola = !orcState.temMola; renderOrc(document.getElementById('pgWrap')); }
@@ -327,6 +344,7 @@ function orcCalcAndRender() {
     temMola:!!s.temMola,
     puxadoresQtd:s.puxadoresQtd||1,
     janelaFolhas:s.janelaFolhas||2,
+    kitCor:s.kitCor||'branco',
   });
   orcState.resultado = res;
   var rb = document.getElementById('orcResultBox');
@@ -369,6 +387,7 @@ function orcTrocaTipo(tipo) {
   orcState.janelaFolhas  = 2;
   orcState.puxadoresQtd  = 1;
   orcState.kitPivotante  = 'comum';
+  orcState.kitCor        = 'branco';
   if (tipo==='correr') orcState.folhasCorrer = 2;
   renderOrc(document.getElementById('pgWrap'));
 }

@@ -26,17 +26,20 @@ const CORRER_PRECOS_DEF = {
 };
 
 const COMERCIAL_DEF = {
-  frete_gratis_km:    20,
-  frete_por_km_extra:  3,
-  desconto_avista:  0.10,
-  botao_frances:    2.50,
-  botoes_quant:        4,
-  recorte_por_m2:     10,
-  box_por_m2:        120,
-  janela_por_m:      100,
-  mola_hidraulica:   500,
-  cantoneira_por_m:   10,
-  pu_por_m:           70,
+  frete_gratis_km:      20,
+  frete_por_km_extra:    3,
+  desconto_avista:    0.10,
+  botao_frances:      2.50,
+  botoes_quant:          4,
+  recorte_por_m2:       10,
+  mola_hidraulica:     500,
+  cantoneira_por_m:     10,
+  pu_por_m:             70,
+  // Kit engenharia (janelas, correr, box)
+  kit_eng_branco:      120,  // R$/m² — alumínios + trilhos + perfis
+  kit_eng_preto:       130,  // R$/m² — kit preto
+  kit_eng_extra:        10,  // R$/m² a mais em 4 folhas
+  roldana:              10,  // R$ cada roldana
 };
 
 const EMPRESA_DEF = {
@@ -164,7 +167,7 @@ let orcState = {
   vidroKey:'temp_trans', accs:{}, km:0,
   cliente:'', fone:'',
   resultado:null, folhasCorrer:2, janelaFolhas:2, puxadorCorrer:false, puxadoresQtd:1,
-  kitPivotante:'comum', temMola:false,
+  kitPivotante:'comum', temMola:false, kitCor:'branco',
 };
 
 // Declara os globais que loadCFG vai preencher
