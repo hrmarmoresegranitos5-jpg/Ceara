@@ -190,6 +190,7 @@ function renderOrc(wrap) {
   // ── Montar HTML ──
   wrap.innerHTML = '<div id="pgOrcamento">'
     + tipoBlock
+    + '<svg id="orcCAD" class="orc-cad" viewBox="0 0 320 200"></svg>'
     + pivConfig
     + folhasBlock
     + janelaBlock
@@ -215,6 +216,7 @@ function renderOrc(wrap) {
     + '<div style="height:88px"></div>'
     + '</div>';
 
+  _orcRefreshCAD();
   orcCalcAndRender();
 }
 
@@ -305,6 +307,7 @@ function orcUpdate() {
   s.fone    = document.getElementById('orcFone')?.value||'';
   if (s.temFixo)       s.fixoLarg = parseFloat(document.getElementById('orcFixoLarg')?.value)||40;
   if (s.temBandeirola) s.bandH    = parseFloat(document.getElementById('orcBandH')?.value)||40;
+  _orcRefreshCAD();
   orcCalcAndRender();
 }
 

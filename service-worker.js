@@ -1,5 +1,5 @@
 // service-worker.js — Ceará Planejados
-const CACHE_NAME = 'cear-v46';
+const CACHE_NAME = 'cear-v47';
 const ASSETS = [
   './',
   './index.html',
