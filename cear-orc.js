@@ -7,7 +7,13 @@ function renderOrc(wrap) {
   const isPiv    = s.tipo === 'pivotante';
   const isCorrer = s.tipo === 'correr';
   const isJanela = s.tipo === 'janela';
-  const accConfig = ACESSORIOS_CONFIG[s.tipo] || [];
+  // Para pivotante 2 folhas: adiciona contra fechadura automaticamente
+  let accConfig = (ACESSORIOS_CONFIG[s.tipo] || []).slice();
+  if (isPiv && (s.pivFolhas||1) === 2) {
+    if (!accConfig.find(a => a.id === 'contra')) {
+      accConfig.push({ id:'contra', nome:'Contra fechadura (2 folhas)', preco:50, obrig:true });
+    }
+  }
   const vidrosDispo = (VIDROS_POR_TIPO[s.tipo]||[]).map(k=>({key:k,...CFG.vidros[k]}));
 
   // ── Seletor visual de configuração (pivotante) — usa concatenação para evitar
@@ -97,40 +103,50 @@ function renderOrc(wrap) {
     </div>
   ` : '';
 
-  // ── Kit pivotante + Mola (separados) ──
-  const kitBlock = isPiv ? `
-    <div class="field">
-      <label>Kit pivotante</label>
-      <div class="kit-opts">
-        <button class="kit-btn${s.kitPivotante==='comum'?' active':''}" onclick="orcSetKit('comum')">
-          <span class="kit-nm">Comum</span>
-          <span class="kit-sub">R$ 150</span>
-          <span class="kit-desc">Padrão</span>
-        </button>
-        <button class="kit-btn${s.kitPivotante==='jumbo'?' active':''}" onclick="orcSetKit('jumbo')">
-          <span class="kit-nm">Jumbo</span>
-          <span class="kit-sub">R$ 350</span>
-          <span class="kit-desc">Portas grandes/pesadas</span>
-        </button>
-      </div>
-    </div>
-    <div class="field">
-      <label>Mola hidráulica</label>
-      <div class="kit-opts">
-        <button class="kit-btn kit-btn-mola${s.temMola?' active':''}" onclick="orcToggleMola()" style="flex:1">
-          <span class="kit-nm">${s.temMola ? '✓ Mola Hidráulica' : '+ Mola Hidráulica'}</span>
-          <span class="kit-sub">R$ 500</span>
-          <span class="kit-desc">Instala junto com o kit · Fecha automático</span>
-        </button>
-      </div>
-    </div>
-  ` : '';
+  // ── Kit pivotante + Mola (separados, sem template literals aninhados) ──
+  let kitBlock = '';
+  if (isPiv) {
+    // Kit buttons: usar SVG containers com IDs, preenchidos após render
+    const svgComum = '<svg id="mkitComum" class="kit-cad" viewBox="0 0 50 50" width="50" height="50"></svg>';
+    const svgJumbo = '<svg id="mkitJumbo" class="kit-cad" viewBox="0 0 50 50" width="50" height="50"></svg>';
+    const svgMola  = '<svg id="mkitMola"  class="kit-cad" viewBox="0 0 50 50" width="50" height="50"></svg>';
+
+    // Build kit HTML safely
+    function _kitBtn(kitId, svg, nm, sub, desc) {
+      return '<button class="kit-btn' + (s.kitPivotante===kitId?' active':'')
+           + '" onclick="orcSetKit(\'' + kitId + '\')">'
+           + svg + '<span class="kit-nm">' + nm + '</span>'
+           + '<span class="kit-sub">' + sub + '</span>'
+           + '<span class="kit-desc">' + desc + '</span></button>';
+    }
+    kitBlock = '<div class="field"><label>Kit pivotante</label>'
+      + '<div class="kit-opts kit-opts-kits">'
+      + _kitBtn('comum', svgComum, 'Comum',  'R$ 150', 'Padrão')
+      + _kitBtn('jumbo', svgJumbo, 'Jumbo',  'R$ 350', 'Portas grandes')
+      + '</div></div>'
+      + '<div class="field"><label>Mola hidráulica'
+      + ' <span style="font-size:.6rem;color:var(--t4)">— instala junto com o kit</span></label>'
+      + '<button class="kit-btn kit-btn-mola' + (s.temMola?' active':'') + '"'
+      + ' onclick="orcToggleMola()" style="width:100%">'
+      + svgMola
+      + '<span class="kit-nm">' + (s.temMola?'✓ Mola Hidráulica':' Mola Hidráulica') + '</span>'
+      + '<span class="kit-sub">R$ 500</span>'
+      + '<span class="kit-desc">Fecha automático</span></button></div>';
+  }
 
 
-  // Acessórios visíveis (exclui 'kit' em pivotante, tratado pelo kitBlock)
+  // Acessórios: para pivotante, mostra só puxador e fixador (kit já está no kitBlock)
   let accsBlock = '';
   if (!isCorrer) {
-    const visAcc = accConfig.filter(a => !(isPiv && a.id === 'kit'));
+    // Pivotante: só puxador e fixador (kit tratado acima, contra fechadura abaixo)
+    const pivAccs = [
+      { id:'puxador', nome:'Puxador',  preco:100, obrig:false },
+      { id:'fixador', nome:'Fixador',  preco:60,  obrig:false },
+    ];
+    if (isPiv && (s.pivFolhas||1) === 2) {
+      pivAccs.push({ id:'contra', nome:'Contra fechadura (2 folhas)', preco:50, obrig:true });
+    }
+    const visAcc = isPiv ? pivAccs : accConfig;
     if (visAcc.length) {
       let ah = '<div class="section" style="margin-bottom:14px"><div class="section-ttl">Acessórios</div><div class="orc-accs" id="orcAccs">';
       visAcc.forEach(a => {
@@ -204,7 +220,7 @@ function renderOrc(wrap) {
   _orcRefreshCAD();
   orcCalcAndRender();
   // Render mini-CADs do seletor pivotante
-  if (isPiv) _renderMiniCADs();
+  if (isPiv) { _renderMiniCADs(); _renderMiniKitCADs(); }
 }
 
 // Configs pivotante
@@ -221,6 +237,7 @@ function orcSetPivConfig(id) {
   const c = PIV_CONFIGS[id];
   if (!c) return;
   orcState.pivFolhas      = c.folhas;
+  orcState.accs           = {}; // reset ao trocar config
   orcState.temFixo        = c.fixo;
   orcState.temBandeirola  = c.band;
   orcState.fixoLado       = c.fixoLado;
@@ -344,17 +361,35 @@ function orcTrocaTipo(tipo) {
   renderOrc(document.getElementById('pgWrap'));
 }
 
+function _getVisAcc() {
+  const s = orcState;
+  const isPiv = s.tipo === 'pivotante';
+  if (isPiv) {
+    const list = [
+      { id:'puxador', nome:'Puxador',  preco:100, obrig:false },
+      { id:'fixador', nome:'Fixador',  preco:60,  obrig:false },
+    ];
+    if ((s.pivFolhas||1) === 2) list.push({ id:'contra', nome:'Contra fechadura', preco:50, obrig:true });
+    return list;
+  }
+  return ACESSORIOS_CONFIG[s.tipo] || [];
+}
+
 function orcToggleAcc(id, obrig) {
   if (obrig) return;
   orcState.accs[id] = !(orcState.accs[id]??false);
   orcCalcAndRender();
-  const ac = ACESSORIOS_CONFIG[orcState.tipo]||[];
+  const visAcc = _getVisAcc();
   const cont = document.getElementById('orcAccs');
   if (cont) {
-    cont.innerHTML = ac.map(a=>{
-      const ativ=orcState.accs[a.id]??a.obrig;
-      return `<button class="orc-acc-btn${ativ?' on':''}${a.obrig?' obrig':''}" onclick="orcToggleAcc('${a.id}',${a.obrig})">${ativ?'✓':'+'} ${a.nome}${a.preco?` (${formatBRL(a.preco)})`:''}</button>`;
-    }).join('');
+    let html = '';
+    visAcc.forEach(a => {
+      const ativ = orcState.accs[a.id] ?? a.obrig;
+      html += '<button class="orc-acc-btn' + (ativ?' on':'') + (a.obrig?' obrig':'') + '"'
+            + ' onclick="orcToggleAcc(\'' + a.id + '\',' + a.obrig + ')">'
+            + (ativ?'✓':'+') + ' ' + a.nome + (a.preco ? ' (' + formatBRL(a.preco) + ')' : '') + '</button>';
+    });
+    cont.innerHTML = html;
   }
 }
 
