@@ -95,23 +95,44 @@ function fechaduraVP(svg, x, y, h) {
   svg.appendChild(el('circle',{cx:x,cy:cy-5,r:'1.5',fill:PAL.lockW}));
   svg.appendChild(el('circle',{cx:x,cy:cy+5,r:'1.5',fill:PAL.lockW}));
 }
-// Puxador — pequeno círculo com linha diagonal (estilo Bahia Vidros 1607)
+// Puxador — barra vertical (tubo inox) fixada no vidro
 function puxador(svg, x, y, h) {
+  const barLen = Math.min(h * 0.28, 55);  // comprimento da barra
   const py = y + h * 0.45;
-  svg.appendChild(el('circle',{cx:x,cy:py,r:'3.5',fill:'none',stroke:PAL.frame,'stroke-width':'1.5'}));
-  svg.appendChild(el('line',{x1:x,y1:py,x2:x+8,y2:py-8,stroke:PAL.frame,'stroke-width':'1.5','stroke-linecap':'round'}));
+  const px = x - 8; // barra fica recuada da borda
+  // Base/rosca superior
+  svg.appendChild(el('circle',{cx:px,cy:py,r:'3.5',fill:PAL.gold,opacity:'0.9'}));
+  svg.appendChild(el('circle',{cx:px,cy:py,r:'1.8',fill:PAL.frame}));
+  // Corpo da barra
+  svg.appendChild(el('rect',{x:px-3,y:py,width:6,height:barLen,rx:'3',fill:PAL.gold,opacity:'0.85'}));
+  svg.appendChild(el('rect',{x:px-1.5,y:py+4,width:3,height:barLen-8,rx:'1.5',fill:'rgba(0,0,0,0.25)'}));
+  // Base/rosca inferior
+  svg.appendChild(el('circle',{cx:px,cy:py+barLen,r:'3.5',fill:PAL.gold,opacity:'0.9'}));
+  svg.appendChild(el('circle',{cx:px,cy:py+barLen,r:'1.8',fill:PAL.frame}));
 }
-// Pivô — dois círculos sobrepostos no canto (estilo 1101)
+// Dobradiça (bracket/grampo na borda do vidro) — forma real da 1101S/1101J
 function pivots(svg, x, y, h, kit) {
-  const r = kit === 'jumbo' ? 4.5 : 3;
-  const off = kit === 'jumbo' ? 20 : 14;
-  svg.appendChild(el('circle',{cx:x,cy:y+off,r,fill:PAL.frame}));
-  svg.appendChild(el('circle',{cx:x,cy:y+off+r,r:r*0.5,fill:PAL.gold}));
-  svg.appendChild(el('circle',{cx:x,cy:y+h-off,r,fill:PAL.frame}));
-  svg.appendChild(el('circle',{cx:x,cy:y+h-off-r,r:r*0.5,fill:PAL.gold}));
-  if (kit==='jumbo') {
-    svg.appendChild(el('circle',{cx:x,cy:y+h/2,r,fill:PAL.frame}));
-    svg.appendChild(el('circle',{cx:x,cy:y+h/2+r,r:r*0.5,fill:PAL.gold}));
+  const isJ = kit === 'jumbo';
+  const bW = isJ ? 10 : 7;   // largura do grampo
+  const bH = isJ ? 22 : 16;  // altura do grampo
+  const off = isJ ? 22 : 16; // distância das bordas
+  // Grampo superior (dobradiça 1101)
+  const topY = y + off;
+  svg.appendChild(el('rect',{x:x-bW/2,y:topY,width:bW,height:bH,rx:'2',fill:PAL.gold,opacity:'0.9'}));
+  svg.appendChild(el('rect',{x:x-bW/2+1,y:topY+2,width:bW-2,height:bH-4,rx:'1',fill:'rgba(0,0,0,0.3)'}));
+  // Pivô superior (pino)
+  svg.appendChild(el('rect',{x:x-1,y:topY-6,width:2,height:6,fill:PAL.frame}));
+  // Grampo inferior (dobradiça 1103)
+  const botY = y + h - off - bH;
+  svg.appendChild(el('rect',{x:x-bW/2,y:botY,width:bW,height:bH,rx:'2',fill:PAL.gold,opacity:'0.9'}));
+  svg.appendChild(el('rect',{x:x-bW/2+1,y:botY+2,width:bW-2,height:bH-4,rx:'1',fill:'rgba(0,0,0,0.3)'}));
+  // Pivô inferior (pino)
+  svg.appendChild(el('rect',{x:x-1,y:botY+bH,width:2,height:6,fill:PAL.frame}));
+  // Jumbo: grampo central adicional
+  if (isJ) {
+    const midY = y + h/2 - bH/2;
+    svg.appendChild(el('rect',{x:x-bW/2,y:midY,width:bW,height:bH,rx:'2',fill:PAL.gold,opacity:'0.85'}));
+    svg.appendChild(el('rect',{x:x-bW/2+1,y:midY+2,width:bW-2,height:bH-4,rx:'1',fill:'rgba(0,0,0,0.3)'}));
   }
 }
 // Contra-fechadura VV — quadrado branco com detalhe
@@ -211,11 +232,15 @@ function renderCAD(svgEl, state) {
       fechaduraVP(svgEl, portaX+pw, portaY, ph);
       panelNum(svgEl, portaX, portaY, pw, ph, 1);
     }
-    // Extras
+    // Fixador (batedor magnético) — disco no chão perto da borda livre
     if (accs&&accs.fixador) {
-      const fx2=portaX+pw-12;
-      svgEl.appendChild(el('circle',{cx:fx2,cy:portaY+ph-8,r:'4',fill:PAL.gold,opacity:'0.85'}));
-      svgEl.appendChild(el('text',{x:fx2,y:portaY+ph-17,'text-anchor':'middle','font-size':'5.5','font-family':'Outfit,sans-serif','font-weight':'700',fill:PAL.gold},'FIX'));
+      const fxX2=portaX+pw-14, fxY=portaY+ph-2;
+      // Base no chão
+      svgEl.appendChild(el('ellipse',{cx:fxX2,cy:fxY+4,rx:'7',ry:'3',fill:PAL.gold,opacity:'0.7'}));
+      // Disco magnético
+      svgEl.appendChild(el('circle',{cx:fxX2,cy:fxY,r:'5',fill:PAL.gold,opacity:'0.85'}));
+      svgEl.appendChild(el('circle',{cx:fxX2,cy:fxY,r:'3',fill:PAL.frame}));
+      svgEl.appendChild(el('circle',{cx:fxX2,cy:fxY,r:'1.5',fill:PAL.gold,opacity:'0.6'}));
     }
     if (temMola) molaBar(svgEl, portaX, portaY+ph, pw);
     // Trilho inferior
@@ -282,7 +307,10 @@ function renderCAD(svgEl, state) {
       if (i>0) divLine(svgEl, fx, portaY, ph);
     }
     const mJi = fixaJ.length===2 ? 1 : nFj-1;
-    fechaduraVP(svgEl, portaX+fw2*mJi, portaY, ph);
+    // Bate-fecha VP — peça pequena em U na borda de encontro do painel móvel
+  const bfX = portaX + fw2 * mJi;
+  svgEl.appendChild(el('rect',{x:bfX-4,y:portaY+ph*0.45-4,width:8,height:12,rx:'2',fill:PAL.gold,opacity:'0.85'}));
+  svgEl.appendChild(el('rect',{x:bfX-2,y:portaY+ph*0.45-2,width:4,height:8,rx:'1',fill:PAL.frame}));
     frameLine(svgEl, portaX, portaY, pw, ph);
     svgEl.appendChild(el('text',{x:portaX+pw/2,y:portaY-8,'text-anchor':'middle','font-size':'8','font-family':'Outfit,sans-serif','font-weight':'800',fill:'rgba(255,200,80,0.9)'},nFj+' folhas · '+vpvv2));
     dimH(svgEl, portaX, portaX+pw, portaY+ph+18, larg+' cm');
@@ -422,16 +450,41 @@ function _drawKitSVG(svgId, tipo) {
   while (svg.firstChild) svg.removeChild(svg.firstChild);
   const G='#4EC8DC', K='#0a0a14', GLD='#C9A84C';
   function e2(tag,a,t){const el2=document.createElementNS(ns,tag);Object.entries(a).forEach(([k,v])=>el2.setAttribute(k,v));if(t!==undefined)el2.textContent=t;return el2;}
+
+  // Vidro da porta (fundo ciano)
+  svg.appendChild(e2('rect',{x:16,y:4,width:24,height:42,rx:2,fill:G,stroke:K,'stroke-width':'1.5'}));
+
   if (tipo==='comum') {
-    svg.appendChild(e2('rect',{x:14,y:5,width:22,height:40,rx:2,fill:G,stroke:K,'stroke-width':'1.5'}));
-    svg.appendChild(e2('circle',{cx:16,cy:12,r:'3.5',fill:K}));svg.appendChild(e2('circle',{cx:16,cy:16,r:'2',fill:GLD}));
-    svg.appendChild(e2('circle',{cx:16,cy:38,r:'3.5',fill:K}));svg.appendChild(e2('circle',{cx:16,cy:34,r:'2',fill:GLD}));
-    svg.appendChild(e2('rect',{x:29,y:18,width:4,height:14,rx:2,fill:K}));
-  } else {
-    svg.appendChild(e2('rect',{x:12,y:5,width:26,height:40,rx:2,fill:G,stroke:K,'stroke-width':'1.5'}));
-    svg.appendChild(e2('circle',{cx:15,cy:10,r:'4.5',fill:K}));svg.appendChild(e2('circle',{cx:15,cy:15,r:'2.5',fill:GLD}));
-    svg.appendChild(e2('circle',{cx:15,cy:25,r:'4',fill:K}));svg.appendChild(e2('circle',{cx:15,cy:25,r:'2',fill:GLD}));
-    svg.appendChild(e2('circle',{cx:15,cy:40,r:'4.5',fill:K}));svg.appendChild(e2('circle',{cx:15,cy:35,r:'2.5',fill:GLD}));
-    svg.appendChild(e2('rect',{x:30,y:16,width:5,height:18,rx:2.5,fill:K}));
+    // Dobradiça comum: grampo pequeno na borda esquerda (topo e base)
+    // Grampo superior (1101 S)
+    svg.appendChild(e2('rect',{x:11,y:8,width:7,height:14,rx:2,fill:GLD}));
+    svg.appendChild(e2('rect',{x:12,y:10,width:5,height:10,rx:1,fill:'rgba(0,0,0,0.3)'}));
+    svg.appendChild(e2('rect',{x:14,y:4,width:2,height:5,rx:1,fill:K})); // pino
+    // Grampo inferior (1103 S)
+    svg.appendChild(e2('rect',{x:11,y:28,width:7,height:14,rx:2,fill:GLD}));
+    svg.appendChild(e2('rect',{x:12,y:30,width:5,height:10,rx:1,fill:'rgba(0,0,0,0.3)'}));
+    svg.appendChild(e2('rect',{x:14,y:41,width:2,height:5,rx:1,fill:K})); // pino
+    // Puxador: barra vertical no vidro
+    svg.appendChild(e2('rect',{x:32,y:17,width:5,height:16,rx:2.5,fill:GLD,opacity:'0.9'}));
+    svg.appendChild(e2('circle',{cx:34.5,cy:17,r:'3',fill:GLD,opacity:'0.9'}));
+    svg.appendChild(e2('circle',{cx:34.5,cy:33,r:'3',fill:GLD,opacity:'0.9'}));
+
+  } else { // jumbo
+    // Dobradiça jumbo: grampos maiores + central
+    // Grampo superior (1101 J) - maior
+    svg.appendChild(e2('rect',{x:9,y:6,width:10,height:16,rx:2,fill:GLD}));
+    svg.appendChild(e2('rect',{x:10,y:8,width:8,height:12,rx:1,fill:'rgba(0,0,0,0.3)'}));
+    svg.appendChild(e2('rect',{x:13,y:2,width:2,height:5,rx:1,fill:K}));
+    // Grampo central (adicional no jumbo)
+    svg.appendChild(e2('rect',{x:9,y:17,width:10,height:16,rx:2,fill:GLD,opacity:'0.85'}));
+    svg.appendChild(e2('rect',{x:10,y:19,width:8,height:12,rx:1,fill:'rgba(0,0,0,0.3)'}));
+    // Grampo inferior (1103 J)
+    svg.appendChild(e2('rect',{x:9,y:28,width:10,height:16,rx:2,fill:GLD}));
+    svg.appendChild(e2('rect',{x:10,y:30,width:8,height:12,rx:1,fill:'rgba(0,0,0,0.3)'}));
+    svg.appendChild(e2('rect',{x:13,y:43,width:2,height:5,rx:1,fill:K}));
+    // Puxador robusto
+    svg.appendChild(e2('rect',{x:32,y:15,width:6,height:20,rx:3,fill:GLD,opacity:'0.9'}));
+    svg.appendChild(e2('circle',{cx:35,cy:15,r:'3.5',fill:GLD,opacity:'0.9'}));
+    svg.appendChild(e2('circle',{cx:35,cy:35,r:'3.5',fill:GLD,opacity:'0.9'}));
   }
 }
