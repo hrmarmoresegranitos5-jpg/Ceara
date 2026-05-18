@@ -120,6 +120,17 @@ function vpvvLabel(svg, x, y, txt) {
   svg.appendChild(el('text', {x, y, 'text-anchor':'middle', 'font-size':'8', 'font-family':'Outfit,sans-serif', 'font-weight':'800', fill:'rgba(255,200,80,0.9)'}, txt));
 }
 
+
+// Cantoneiras nos 4 cantos (L-shapes, estilo Bahia Vidros)
+function corners(svg, x, y, w, h, color) {
+  const sz=8, th=2.5;
+  const pts = [[x,y,1,1],[x+w,y,-1,1],[x,y+h,1,-1],[x+w,y+h,-1,-1]];
+  pts.forEach(([cx,cy,dx,dy]) => {
+    svg.appendChild(el('rect', {x:cx, y:cy, width:sz*dx, height:th, fill:color}));
+    svg.appendChild(el('rect', {x:cx, y:cy, width:th, height:sz*dy, fill:color}));
+  });
+}
+
 // ── RENDERIZADOR PRINCIPAL ────────────────────────────────────
 function renderCAD(svgEl, state) {
   const { tipo, larg, alt, folhas, fixoLarg, bandH, temFixo, temBandeirola, pivFolhas, kitPivotante, temMola, accs } = state;
@@ -212,6 +223,11 @@ function renderCAD(svgEl, state) {
     // Mola
     if (temMola) mola(svgEl, portaX, portaY+ph, pw);
 
+    // Cantoneiras nos cantos (estilo Bahia Vidros 1302)
+    corners(svgEl, portaX, portaY, pw, ph, PAL.frame);
+    if (hasFixo) corners(svgEl, fxX, portaY, fxW, ph, PAL.frame);
+    if (hasBand) corners(svgEl, portaX, bandY, pw+(hasFixo?fxW:0), bdH, PAL.frame);
+
     // Moldura geral
     frame(svgEl, portaX, portaY, pw, ph);
     if (hasFixo) { divLine(svgEl, fxX, portaY, ph); frame(svgEl, fxX, portaY, fxW, ph); }
@@ -248,7 +264,7 @@ function renderCAD(svgEl, state) {
     dimV(svgEl, portaX+pw+18, portaY, portaY+ph, alt+' cm');
 
   } else if (tipo === 'janela') {
-    const nFj = larg <= 120 ? 2 : 4;
+    const nFj = state.janelaFolhas || (larg <= 120 ? 2 : 4);
     const fixaJ = nFj===4 ? [0, nFj-1] : [];
     const fw2 = Math.round(pw / nFj);
     const vpvv2 = nFj===2 ? 'VP' : 'VV';
@@ -383,7 +399,7 @@ function renderMiniCAD(svgId, config) {
     svg.appendChild(r(M-1, H-M, W-M*2+2, 3, {rx:'1', fill:DIV}));
 
   } else if (tipo==='janela') {
-    const nFj=folhas||2, fw2=(W-M*2)/nFj, fixI=nFj===4?[0,nFj-1]:[];
+    const nFj=folhas||2, fw2=(W-M*2)/nFj, fixI=nFj===4?[0,nFj-1]:[0];
     for(let f=0;f<nFj;f++){
       const fx2=M+fw2*f;
       svg.appendChild(r(fx2, M, fw2, H-M*2, {fill:fixI.includes(f)?FIXED:GLASS}));

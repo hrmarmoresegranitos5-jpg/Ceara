@@ -61,30 +61,45 @@ function renderOrc(wrap) {
     </div>
   ` : '';
 
-  // ── Info correr VP/VV ──
-  const correrInfo = isCorrer ? (() => {
-    const nF=s.folhasCorrer, nM=CORRER_MOVEIS[nF]??2, nFx=nF-nM, vpvv=nM<=1?'VP':'VV';
-    return `<div class="correr-info" id="correrInfo">
-      <div class="ci-item"><span class="ci-ic">🔲</span><span class="ci-v">${nF}</span><span class="ci-l">folha${nF>1?'s':''}</span></div>
-      <div class="ci-sep"></div>
-      <div class="ci-item"><span class="ci-ic">↔️</span><span class="ci-v">${nM}</span><span class="ci-l">móve${nM>1?'is':'l'}</span></div>
-      ${nFx>0?`<div class="ci-sep"></div><div class="ci-item"><span class="ci-ic">🔒</span><span class="ci-v">${nFx}</span><span class="ci-l">fixa${nFx>1?'s':''}</span></div>`:''}
-      <div class="ci-sep"></div>
-      <div class="ci-item"><span class="ci-ic">🔑</span><span class="ci-v">${vpvv}</span><span class="ci-l">fechadura</span></div>
-      <div class="ci-sep"></div>
-      <div class="ci-item"><span class="ci-ic">✋</span><span class="ci-v">${nM}</span><span class="ci-l">puxador${nM>1?'es':''}</span></div>
-    </div>`;
-  })() : '';
+  // ── Info correr + acessórios ──
+  let correrInfo = '';
+  if (isCorrer) {
+    const nF=s.folhasCorrer||2, nM=CORRER_MOVEIS[nF]||2, nFx=nF-nM, vpvv=nM<=1?'VP':'VV';
+    // Badge de resumo
+    let badge = '<div class="correr-info">'
+      + '<div class="ci-item"><span class="ci-ic">🔲</span><span class="ci-v">'+nF+'</span><span class="ci-l">folha'+(nF>1?'s':'')+'</span></div>'
+      + '<div class="ci-sep"></div>'
+      + '<div class="ci-item"><span class="ci-ic">↔️</span><span class="ci-v">'+nM+'</span><span class="ci-l">móve'+(nM>1?'is':'l')+'</span></div>';
+    if (nFx>0) badge += '<div class="ci-sep"></div><div class="ci-item"><span class="ci-ic">🔒</span><span class="ci-v">'+nFx+'</span><span class="ci-l">fixa'+(nFx>1?'s':'')+'</span></div>';
+    badge += '<div class="ci-sep"></div>'
+      + '<div class="ci-item"><span class="ci-ic">🔑</span><span class="ci-v">'+vpvv+'</span><span class="ci-l">fechadura</span></div>'
+      + '</div>';
+    // Acessórios correr
+    const puxOn = s.accs && s.accs.puxador;
+    let accsCorrer = '<div class="section" style="margin:0 0 14px"><div class="section-ttl">Acessórios</div>'
+      + '<div class="orc-accs" id="orcAccs">'
+      + '<button class="orc-acc-btn'+(puxOn?' on':'')+'" data-id="puxador" onclick="orcToggleAcc(this.dataset.id,false)">'
+      + (puxOn?'✓':'+')+ ' Puxador ('+nM+'x R$100,00)</button>'
+      + '</div></div>';
+    correrInfo = badge + accsCorrer;
+  }
 
-  // ── Info janela auto ──
-  const janelaInfo = isJanela ? (() => {
-    const nFj = s.larg<=120?2:4, vpvv=nFj===2?'VP':'VV';
-    return `<div class="correr-info">
-      <div class="ci-item"><span class="ci-ic">🪟</span><span class="ci-v">${nFj}</span><span class="ci-l">folhas</span></div>
-      <div class="ci-sep"></div>
-      <div class="ci-item"><span class="ci-ic">🏷️</span><span class="ci-v">${vpvv}</span><span class="ci-l">${s.larg<=120?'≤120cm':'>120cm'}</span></div>
-    </div>`;
-  })() : '';
+  // ── Seletor folhas janela (manual) ──
+  let janelaInfo = '';
+  if (isJanela) {
+    const nFj = s.janelaFolhas||2;
+    const vpvv = nFj===2?'VP':'VV';
+    const moveis2 = nFj===2?1:2, fixas2 = nFj===2?1:2;
+    janelaInfo = '<div class="field" style="margin-bottom:14px"><label>Número de folhas</label>'
+      + '<div class="correr-folhas">'
+      + '<button class="folha-btn' + (nFj===2?' active':'') + '" onclick="orcSetJanelaFolhas(2)">'
+      + '<span class="folha-n">2</span><span class="folha-lbl">folhas</span>'
+      + '<span class="folha-desc">1 fixa · 1 móvel · VP</span></button>'
+      + '<button class="folha-btn' + (nFj===4?' active':'') + '" onclick="orcSetJanelaFolhas(4)">'
+      + '<span class="folha-n">4</span><span class="folha-lbl">folhas</span>'
+      + '<span class="folha-desc">2 fixas · 2 móveis · VV</span></button>'
+      + '</div></div>';
+  }
 
   // ── Campos dimensões ──
   // Para pivotante com fixo: campo de vão total ou largura do fixo
@@ -246,6 +261,11 @@ function orcSetPivConfig(id) {
   renderOrc(document.getElementById('pgWrap'));
 }
 
+function orcSetJanelaFolhas(n) {
+  orcState.janelaFolhas = n;
+  renderOrc(document.getElementById('pgWrap'));
+}
+
 function orcSetFolhas(n) {
   orcState.folhasCorrer = n;
   renderOrc(document.getElementById('pgWrap'));
@@ -289,6 +309,7 @@ function _orcRefreshCAD() {
     bandH:          s.bandH       || 40,
     temMola:        s.temMola,
     accs:           s.accs,
+    janelaFolhas:   s.janelaFolhas||2,
   });
 }
 
@@ -357,13 +378,15 @@ function orcTrocaTipo(tipo) {
   orcState.temBandeirola  = false;
   orcState.pivFolhas      = 1;
   orcState.temMola        = false;
+  orcState.janelaFolhas   = 2;
   if (tipo==='correr') orcState.folhasCorrer = 2;
   renderOrc(document.getElementById('pgWrap'));
 }
 
 function _getVisAcc() {
   const s = orcState;
-  const isPiv = s.tipo === 'pivotante';
+  const isPiv    = s.tipo === 'pivotante';
+  const isCorrer = s.tipo === 'correr';
   if (isPiv) {
     const list = [
       { id:'puxador', nome:'Puxador',  preco:100, obrig:false },
@@ -371,6 +394,10 @@ function _getVisAcc() {
     ];
     if ((s.pivFolhas||1) === 2) list.push({ id:'contra', nome:'Contra fechadura', preco:50, obrig:true });
     return list;
+  }
+  if (isCorrer) {
+    const nM = CORRER_MOVEIS[s.folhasCorrer||2]||2;
+    return [{ id:'puxador', nome:'Puxador ('+nM+'x R$100,00)', preco:100*nM, obrig:false }];
   }
   return ACESSORIOS_CONFIG[s.tipo] || [];
 }
