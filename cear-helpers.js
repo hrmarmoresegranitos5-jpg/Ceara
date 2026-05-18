@@ -47,10 +47,12 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
     linhas.push({ nome:`Fechadura VP ×${nMoveis}`, valor:valFechadura });
     total += valFechadura;
 
-    // Puxador (por folha móvel)
-    const valPuxador = nMoveis * CORRER_PRECOS.puxador;
-    linhas.push({ nome:`Puxador ×${nMoveis}`, valor:valPuxador });
-    total += valPuxador;
+    // Puxador (por folha móvel, se ativado)
+    if (accs && accs.puxador) {
+      const valPuxador = nMoveis * CORRER_PRECOS.puxador;
+      linhas.push({ nome:'Puxador ×'+nMoveis, valor:valPuxador });
+      total += valPuxador;
+    }
 
     // Frete
     const kmNum = parseFloat(km) || 0;
@@ -102,20 +104,53 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
     total += CFG.comercial.mola_hidraulica || 500;
   }
 
-  (ACESSORIOS_CONFIG[tipo] || []).forEach(a => {
-    const ativo = accs[a.id] ?? a.obrig;
-    if (!ativo) return;
-    let val = 0;
-    if (a.preco !== null && a.preco !== undefined) { val = a.preco; }
-    else {
-      if (tipo === 'janela')  val = (larg/100) * 100;
-      if (tipo === 'box')     val = area * 120;
-      if (tipo === 'espelho' && a.id === 'botoes') val = larg >= 60 ? 4*15 : 0;
-      if (tipo === 'comum'   && a.id === 'recorte') val = area * 10;
+  // Pivotante: usa lista customizada em vez de ACESSORIOS_CONFIG
+  if (tipo === 'pivotante') {
+    // Kit (comum ou jumbo)
+    const kitPreco = kitPivotante === 'jumbo' ? 350 : 150;
+    const kitNome  = kitPivotante === 'jumbo' ? 'Kit Jumbo' : 'Kit Pivotante';
+    linhas.push({ nome: kitNome, valor: kitPreco });
+    total += kitPreco;
+    descontoBase += kitPreco;
+
+    // Puxador
+    if (accs && accs.puxador) {
+      const nPux = Number(puxadoresQtd) || 1;
+      const valPux = nPux * 100;
+      linhas.push({ nome: 'Puxador ×' + nPux, valor: valPux });
+      total += valPux;
+      descontoBase += valPux;
     }
-    linhas.push({ nome:a.nome, valor:val });
-    total += val;
-  });
+
+    // Fixador
+    if (accs && accs.fixador) {
+      linhas.push({ nome: 'Fixador', valor: 60 });
+      total += 60;
+      descontoBase += 60;
+    }
+
+    // Contra fechadura (2 folhas)
+    if ((pivFolhas||1) === 2) {
+      linhas.push({ nome: 'Contra fechadura', valor: 50 });
+      total += 50;
+      descontoBase += 50;
+    }
+  } else {
+    (ACESSORIOS_CONFIG[tipo] || []).forEach(a => {
+      const ativo = accs[a.id] ?? a.obrig;
+      if (!ativo) return;
+      let val = 0;
+      if (a.preco !== null && a.preco !== undefined) { val = a.preco; }
+      else {
+        if (tipo === 'janela')  val = (larg/100) * 100;
+        if (tipo === 'box')     val = area * 120;
+        if (tipo === 'espelho' && a.id === 'botoes') val = larg >= 60 ? 4*15 : 0;
+        if (tipo === 'comum'   && a.id === 'recorte') val = area * 10;
+      }
+      linhas.push({ nome:a.nome, valor:val });
+      total += val;
+    });
+  }
   const kmNum = parseFloat(km) || 0;
   let frete = 0;
   if (kmNum > FRETE_GRATIS_KM) frete = (kmNum - FRETE_GRATIS_KM) * FRETE_POR_KM_EXTRA;
