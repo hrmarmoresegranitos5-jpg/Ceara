@@ -6,7 +6,7 @@ function formatBRL(v) {
   return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits:2 });
 }
 
-function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, pivFolhas, kitPivotante, temFixo, fixoLarg, temBandeirola, bandH, temMola, puxadoresQtd, janelaFolhas, kitCor }) {
+function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, pivFolhas, kitPivotante, temFixo, fixoLarg, temBandeirola, bandH, temMola, puxadoresQtd, janelaFolhas, kitCor, molaQtd, boxTipo, largB, puxadoresCorrerQtd }) {
   if (!larg || !alt || isNaN(larg) || isNaN(alt)) return null;
   const linhas = []; let total = 0, descontoBase = 0;
   const area = (larg/100)*(alt/100);
@@ -53,7 +53,7 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
 
     // Puxador (opcional, 1 ou 2)
     if (accs && accs.puxador) {
-      const nPux = Number(puxadoresQtd) || 1;
+      const nPux = Number(puxadoresCorrerQtd) || 1;
       const valPux = nPux * 100;
       linhas.push({ nome: 'Puxador ×' + nPux, valor: valPux });
       total += valPux;
@@ -153,17 +153,23 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
       total += valPUB;
     }
   }
-  // Mola hidráulica — add-on separado do kit
-  if (tipo === 'pivotante' && temMola) {
-    linhas.push({ nome:'Mola Hidráulica (instalação)', valor: CFG.comercial.mola_hidraulica || 500 });
-    total += CFG.comercial.mola_hidraulica || 500;
+  // Mola hidráulica — molaQtd: 0, 1 ou 2
+  if (tipo === 'pivotante' && (molaQtd||0) > 0) {
+    const molaPreco = (CFG.comercial.mola_hidraulica || 500) * (molaQtd||1);
+    linhas.push({ nome:'Mola Hidráulica ×' + (molaQtd||1), valor: molaPreco });
+    total += molaPreco;
+    descontoBase += molaPreco;
   }
 
   // Pivotante: usa lista customizada em vez de ACESSORIOS_CONFIG
   if (tipo === 'pivotante') {
-    // Kit (comum ou jumbo)
-    const kitPreco = kitPivotante === 'jumbo' ? 350 : 150;
-    const kitNome  = kitPivotante === 'jumbo' ? 'Kit Jumbo' : 'Kit Pivotante';
+    // Kit (comum ou jumbo) — 2 folhas = 2 kits
+    const nKits    = (pivFolhas||1) === 2 ? 2 : 1;
+    const kitUnit  = kitPivotante === 'jumbo' ? 350 : 150;
+    const kitPreco = kitUnit * nKits;
+    const kitNome  = kitPivotante === 'jumbo'
+      ? 'Kit Jumbo ×' + nKits
+      : 'Kit Pivotante ×' + nKits;
     linhas.push({ nome: kitNome, valor: kitPreco });
     total += kitPreco;
     descontoBase += kitPreco;
@@ -206,14 +212,33 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
       else {
         if (tipo === 'janela')  val = (larg/100) * 100;
         if (tipo === 'box') {
-          // Box: kit engenharia + 4 roldanas
           const coB = CFG.comercial;
           const isPretoB = kitCor==='preto';
-          const kitM2B = isPretoB ? coB.kit_eng_preto : coB.kit_eng_branco;
-          val = area * kitM2B;
-          // Roldanas 4x
-          const rolBox = 4 * coB.roldana;
-          linhas.push({ nome:'Roldanas ×4', valor:rolBox }); total+=rolBox;
+          const bt = boxTipo || 'conv';
+          if (bt === 'fixo') {
+            // Só fixo: PU no perímetro
+            val = 0; // vidro já calculado acima
+            const perim = 2*(larg/100 + alt/100);
+            const valPU = perim * (coB.pu_por_m || 70);
+            linhas.push({ nome:'PU perímetro (' + perim.toFixed(1) + 'm)', valor:valPU }); total+=valPU;
+          } else if (bt === 'canto') {
+            // Box de canto: área A + área B, +R$100/m² no kit
+            const areaB = (largB/100)*(alt/100);
+            const areaTotal = area + areaB;
+            const kitM2Canto = (isPretoB?coB.kit_eng_preto:coB.kit_eng_branco) + 100;
+            val = areaTotal * kitM2Canto;
+            linhas.push({ nome:'Vidro lado B (' + largB + '×' + alt + 'cm)', valor: areaB * vidroObj.preco }); total += areaB * vidroObj.preco;
+            const rolCanto = 4 * coB.roldana;
+            linhas.push({ nome:'Roldanas ×4', valor:rolCanto }); total+=rolCanto;
+          } else {
+            // conv, 3p, 4p
+            const nMovBox = bt==='4p'?2:1;
+            const kitM2B = (isPretoB?coB.kit_eng_preto:coB.kit_eng_branco) + (nMovBox>=2?coB.kit_eng_extra:0);
+            val = area * kitM2B;
+            const nRolB = nMovBox * 2;
+            const rolB = nRolB * coB.roldana;
+            linhas.push({ nome:'Roldanas ×'+nRolB, valor:rolB }); total+=rolB;
+          }
         }
         if (tipo === 'espelho' && a.id === 'botoes') val = larg >= 60 ? 4*15 : 0;
         if (tipo === 'comum'   && a.id === 'recorte') val = area * 10;

@@ -5,6 +5,7 @@
 // Tabelas globais de lookup (evita problemas de escape em onclick)
 var _ORC = {
   kitCores: ['branco','preto'],
+  boxTipos: ['fixo','conv','3p','4p','canto'],
   pivCfgs:  ['1s','1sf','1sb','1sfb','2s','2sf'],
   kits:     ['comum','jumbo'],
   folhas:   [1,2,3,4],
@@ -100,6 +101,35 @@ function renderOrc(wrap) {
       + '<div class="correr-folhas">'+btns+'</div></div>';
   }
 
+  // ── Seletor tipo de box ──
+  let boxTipoBlock = '';
+  const isBox = s.tipo === 'box';
+  if (isBox) {
+    const bt = s.boxTipo||'conv';
+    const bts = [
+      {id:'fixo',  label:'Só Fixo',        desc:'Vidro fixo + PU'},
+      {id:'conv',  label:'1F + 1M',         desc:'Convencional'},
+      {id:'3p',    label:'2F + 1M',         desc:'Central'},
+      {id:'4p',    label:'2F + 2M',         desc:'4 painéis'},
+      {id:'canto', label:'Canto',           desc:'+R$100/m²'},
+    ];
+    let bb = '';
+    bts.forEach(function(b,i){
+      bb += '<button class="folha-btn'+(bt===b.id?' active':'')+'" onclick="orcSetBoxTipo('+i+')">'
+        + '<span class="folha-n" style="font-size:.75rem">'+b.label+'</span>'
+        + '<span class="folha-desc">'+b.desc+'</span></button>';
+    });
+    boxTipoBlock = '<div class="field" style="margin-bottom:12px"><label>Tipo de box</label>'
+      + '<div class="correr-folhas">'+bb+'</div></div>';
+    // Canto: segunda medida
+    if (bt==='canto') {
+      boxTipoBlock += '<div class="campo-row">'
+        + '<div class="field"><label>Lado A — Largura (cm)</label><input id="orcLarg" type="number" inputmode="numeric" value="'+s.larg+'" oninput="orcUpdate()"></div>'
+        + '<div class="field"><label>Lado B — Largura (cm)</label><input id="orcLargB" type="number" inputmode="numeric" value="'+(s.largB||80)+'" oninput="orcUpdate()"></div>'
+        + '</div>';
+    }
+  }
+
   // ── Seletor cor do kit engenharia (correr/janela) ──
   let kitCorBlock = '';
   if (isCorrer || isJanela) {
@@ -147,13 +177,23 @@ function renderOrc(wrap) {
       + '<button class="kit-btn'+(s.kitPivotante==='jumbo'?' active':'')+'" onclick="_setKit(1)">'
         +'<span class="kit-nm">Jumbo</span><span class="kit-sub">R$ 350</span><span class="kit-desc">Portas grandes</span></button>'
       + '</div></div>'
+      // Mola: 1 folha = toggle; 2 folhas = 0/1/2
       + '<div class="field mola-field">'
-      + '<button class="mola-toggle'+(s.temMola?' active':'')+'" onclick="orcToggleMola()">'
-      + '<span class="mola-ic">⚙️</span>'
-      + '<div class="mola-info"><span class="mola-nm">Mola Hidráulica</span>'
-      + '<span class="mola-sub">R$ 500 · fecha automático · instala junto ao kit</span></div>'
-      + '<span class="mola-chk">'+(s.temMola?'✓':'')+'</span>'
-      + '</button></div>';
+      + (nFolhasPiv===2
+        ? '<label style="font-size:.72rem;color:var(--t3)">Mola hidráulica</label>'
+          + '<div class="kit-opts" style="margin-top:6px">'
+          + '<button class="kit-btn'+(s.molaQtd===0?' active':'')+'" onclick="orcSetMola(0)" style="flex:1"><span class="kit-nm">Sem mola</span></button>'
+          + '<button class="kit-btn'+(s.molaQtd===1?' active':'')+'" onclick="orcSetMola(1)" style="flex:1"><span class="kit-nm">1 mola</span><span class="kit-sub">R$ 500</span></button>'
+          + '<button class="kit-btn'+(s.molaQtd===2?' active':'')+'" onclick="orcSetMola(2)" style="flex:1"><span class="kit-nm">2 molas</span><span class="kit-sub">R$ 1.000</span></button>'
+          + '</div>'
+        : '<button class="mola-toggle'+(s.molaQtd>0?' active':'')+'" onclick="orcToggleMola()">'
+          + '<span class="mola-ic">⚙️</span>'
+          + '<div class="mola-info"><span class="mola-nm">Mola Hidráulica</span>'
+          + '<span class="mola-sub">R$ 500 · fecha automático</span></div>'
+          + '<span class="mola-chk">'+(s.molaQtd>0?'✓':'')+'</span>'
+          + '</button>'
+      )
+      + '</div>';
   }
 
   // ── Acessórios ──
@@ -205,6 +245,7 @@ function renderOrc(wrap) {
   // ── Montar HTML ──
   wrap.innerHTML = '<div id="pgOrcamento">'
     + tipoBlock
+    + boxTipoBlock
     + '<svg id="orcCAD" class="orc-cad" viewBox="0 0 320 200"></svg>'
     + pivConfig
     + folhasBlock
@@ -263,7 +304,15 @@ function orcSetFolhas(n)       { orcState.folhasCorrer = n; renderOrc(document.g
 function orcSetKitCor(id)      { orcState.kitCor = id; renderOrc(document.getElementById('pgWrap')); }
 function orcSetKit(id)         { orcState.kitPivotante = id; renderOrc(document.getElementById('pgWrap')); }
 function orcSetPuxQtd(n)       { orcState.puxadoresQtd = n; renderOrc(document.getElementById('pgWrap')); }
-function orcToggleMola()       { orcState.temMola = !orcState.temMola; renderOrc(document.getElementById('pgWrap')); }
+function orcSetMola(n)         { orcState.molaQtd = n; orcState.temMola = n>0; renderOrc(document.getElementById('pgWrap')); }
+function orcToggleMola()       { orcState.molaQtd = orcState.molaQtd>0?0:1; orcState.temMola = orcState.molaQtd>0; renderOrc(document.getElementById('pgWrap')); }
+function orcSetPuxCorrer(n)    { orcState.puxadoresCorrerQtd = n; orcCalcAndRender(); }
+function orcSetBoxTipo(i)      {
+  const bts=['fixo','conv','3p','4p','canto'];
+  orcState.boxTipo = bts[i]||'conv';
+  renderOrc(document.getElementById('pgWrap'));
+}
+
 
 function _renderMiniCADs() {
   var cfgMap = {
@@ -326,6 +375,7 @@ function orcUpdate() {
   s.cliente = document.getElementById('orcCliente')?.value||'';
   s.fone    = document.getElementById('orcFone')?.value||'';
   if (s.temFixo)       s.fixoLarg = parseFloat(document.getElementById('orcFixoLarg')?.value)||40;
+  if (s.tipo==='box'&&s.boxTipo==='canto') s.largB = parseFloat(document.getElementById('orcLargB')?.value)||80;
   if (s.temBandeirola) s.bandH    = parseFloat(document.getElementById('orcBandH')?.value)||40;
   _orcRefreshCAD();
   orcCalcAndRender();
@@ -345,6 +395,10 @@ function orcCalcAndRender() {
     puxadoresQtd:s.puxadoresQtd||1,
     janelaFolhas:s.janelaFolhas||2,
     kitCor:s.kitCor||'branco',
+    molaQtd:s.molaQtd||0,
+    boxTipo:s.boxTipo||'conv',
+    largB:s.largB||80,
+    puxadoresCorrerQtd:s.puxadoresCorrerQtd||1,
   });
   orcState.resultado = res;
   var rb = document.getElementById('orcResultBox');
