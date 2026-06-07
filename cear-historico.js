@@ -11,7 +11,7 @@ function renderHistorico(wrap) {
       <div class="hist-head">
         <div class="hist-titulo">📂 Histórico</div>
         <div class="hist-filtros" id="histFiltros">
-          ${[['todos','📋 Todos'],['cliente','👤 Cliente'],['telefone','📱 Telefone'],['data','📅 Data']].map(([id,lbl])=>`
+          ${[['todos','📋 Todos'],['cliente','👤 Cliente'],['telefone','📱 Telefone'],['data','📅 Data'],['status','🔖 Status']].map(([id,lbl])=>`
             <button class="hist-chip${histState.filtro===id?' on':''}" onclick="histSetFiltro('${id}')">${lbl}</button>
           `).join('')}
         </div>
@@ -38,7 +38,7 @@ function renderHistorico(wrap) {
 }
 
 function histPlaceholder() {
-  return { todos:'Buscar por cliente, telefone ou tipo…', cliente:'Digite o nome do cliente…', telefone:'Digite o telefone…', data:'' }[histState.filtro]||'Buscar…';
+  return { todos:'Buscar por cliente, telefone ou tipo…', cliente:'Digite o nome do cliente…', telefone:'Digite o telefone…', data:'', status:'pendente · aprovado · executado · cancelado' }[histState.filtro]||'Buscar…';
 }
 
 async function histCarregar() {
@@ -59,6 +59,10 @@ function histFiltrar() {
   } else if (histState.filtro==='telefone' && t) {
     const d = histState.busca.replace(/\D/g,'');
     lista = lista.filter(o => (o.clienteFone||'').replace(/\D/g,'').includes(d)||(o.clienteFone||'').toLowerCase().includes(t));
+  } else if (histState.filtro==='status') {
+    const statusMap = {'todos':null,'pendentes':'pendente','aprovados':'aprovado','executados':'executado','cancelados':'cancelado'};
+    // filtro de status usa sub-filtro via busca de texto
+    if (t) lista = lista.filter(o => (o.status||'pendente').includes(t));
   } else if (histState.filtro==='data') {
     if (histState.dataInicio) lista = lista.filter(o => o.criadoEm >= histState.dataInicio);
     if (histState.dataFim)    lista = lista.filter(o => o.criadoEm <= histState.dataFim+'T23:59:59');
@@ -81,38 +85,113 @@ function histRenderLista() {
   listEl.innerHTML = lista.map(orc => histRenderCard(orc)).join('');
 }
 
-function histRenderCard(orc) {
+function _orcVencido(orc) {
+  if (!orc.criadoEm) return false;
+  var diasVal = (CFG.comercial?.validade_dias) || 7;
+  var criado = new Date(orc.criadoEm);
+  var limite = new Date(criado.getTime() + diasVal * 86400000);
+  var status = orc.status || 'pendente';
+  // Só marca como vencido se ainda estiver pendente
+  return status === 'pendente' && new Date() > limite;
+}
+
+
   const c = corTipo(orc.tipo);
   const expanded = histState.expandido === orc.id;
+  const isMulti = orc.tipo === 'multi' || Array.isArray(orc.itens);
+
+  // Subtítulo adaptado
+  let subtitulo;
+  if (isMulti) {
+    const nItens = Array.isArray(orc.itens) ? orc.itens.length : '?';
+    subtitulo = `${nItens} item${nItens !== 1 ? 's' : ''}`;
+  } else {
+    subtitulo = `${orc.larg || '?'}×${orc.alt || '?'}cm`;
+    if (orc.vidro && VIDROS[orc.vidro]) subtitulo += ' · ' + VIDROS[orc.vidro].nome;
+  }
+
+  // Título
+  const titulo = isMulti
+    ? '📦 Orçamento Múltiplo'
+    : (TIPO_LABEL[orc.tipo] || orc.tipo);
+
+  // Linhas do resultado — frete zero exibe "Grátis ✓"
+  let linhasHTML = '';
+  if (isMulti && Array.isArray(orc.itens)) {
+    linhasHTML = orc.itens.map(it => {
+      const tipoLabel = TIPO_LABEL[it.tipo] || it.tipo;
+      const medidas   = (it.larg && it.alt) ? ` ${it.larg}×${it.alt}cm` : '';
+      const valTotal  = it.resultado ? formatBRL(it.resultado.total) : '—';
+      return `<div class="orc-detail-row"><span>${tipoLabel}${medidas}</span><span>${valTotal}</span></div>`;
+    }).join('');
+  } else {
+    linhasHTML = (orc.resultado?.linhas || []).map(l => {
+      const isFrete = l.nome.startsWith('Frete');
+      const valorExibido = (l.valor === 0 && isFrete)
+        ? '<span style="color:var(--grn)">Grátis ✓</span>'
+        : formatBRL(l.valor);
+      return `<div class="orc-detail-row"><span>${l.nome}</span><span>${valorExibido}</span></div>`;
+    }).join('');
+  }
+
   return `
     <div class="orc-card" id="orcCard${orc.id}">
       <div class="orc-card-top" onclick="histToggleExpand(${orc.id})">
-        <div class="orc-card-ic" style="background:${c.bg};border:1px solid ${c.brd}">${TIPO_ICON[orc.tipo]||'📋'}</div>
+        <div class="orc-card-ic" style="background:${c.bg};border:1px solid ${c.brd}">${isMulti ? '📦' : (TIPO_ICON[orc.tipo] || '📋')}</div>
         <div class="orc-card-info">
-          <div class="orc-card-titulo">${TIPO_LABEL[orc.tipo]||orc.tipo}${orc.clienteNome?` · ${orc.clienteNome}`:''}</div>
-          <div class="orc-card-sub">${orc.larg}×${orc.alt}cm${orc.vidro&&VIDROS[orc.vidro]?' · '+VIDROS[orc.vidro].nome:''}</div>
+          <div class="orc-card-titulo">${titulo}${orc.clienteNome ? ` · ${orc.clienteNome}` : ''}</div>
+          <div class="orc-card-sub">${subtitulo}</div>
         </div>
         <div class="orc-card-total">
-          <div class="orc-card-valor">${orc.resultado?formatBRL(orc.resultado.total):'—'}</div>
-          <div class="orc-card-data">${formatData(orc.criadoEm)}</div>
+          <div class="orc-card-valor">${orc.resultado ? formatBRL(orc.resultado.total) : '—'}</div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <div class="orc-card-data">${formatData(orc.criadoEm)}</div>
+            ${_orcVencido(orc) ? `<div class="hist-badge-status" style="background:rgba(220,100,40,.15);color:rgba(220,100,40,1);border:1px solid rgba(220,100,40,.3);font-size:.58rem;padding:1px 5px;border-radius:10px;font-weight:700">⚠️ Vencido</div>` : ''}
+            ${orc.status && orc.status !== 'pendente' ? `<div class="hist-badge-status hist-badge-${orc.status}">${{aprovado:'✅',executado:'🔨',cancelado:'❌'}[orc.status]||''}</div>` : ''}
+          </div>
         </div>
       </div>
-      ${expanded?`
+      ${expanded ? `
         <div class="orc-card-expand">
           <div class="orc-card-detail">
-            ${(orc.resultado?.linhas||[]).map(l=>`<div class="orc-detail-row"><span>${l.nome}</span><span>${formatBRL(l.valor)}</span></div>`).join('')}
-            ${orc.resultado?.totalAvista<orc.resultado?.total?`<div class="orc-detail-row" style="margin-top:4px"><span style="color:var(--grn)">💚 À vista</span><span style="color:var(--grn)">${formatBRL(orc.resultado.totalAvista)}</span></div>`:''}
-            ${orc.clienteFone?`<div class="orc-detail-row"><span>📱 Telefone</span><span>${orc.clienteFone}</span></div>`:''}
+            ${linhasHTML}
+            ${orc.resultado?.totalAvista < orc.resultado?.total ? `<div class="orc-detail-row" style="margin-top:4px"><span style="color:var(--grn)">💚 À vista</span><span style="color:var(--grn)">${formatBRL(orc.resultado.totalAvista)}</span></div>` : ''}
+            ${orc.clienteFone ? `<div class="orc-detail-row"><span>📱 Telefone</span><span>${orc.clienteFone}</span></div>` : ''}
+          </div>
+          <div class="hist-status-row">
+            ${['pendente','aprovado','executado','cancelado'].map(s => {
+              const ativo = (orc.status||'pendente') === s;
+              const cores = {pendente:'var(--gold1)',aprovado:'var(--grn)',executado:'rgba(80,160,220,1)',cancelado:'rgba(220,80,80,1)'};
+              const icones = {pendente:'⏳',aprovado:'✅',executado:'🔨',cancelado:'❌'};
+              return `<button class="hist-status-chip${ativo?' hist-status-on':''}"
+                style="${ativo?'border-color:'+cores[s]+';color:'+cores[s]+';background:'+cores[s].replace('1)','0.12)'):'--x:0'}"
+                onclick="histSetStatus(${orc.id},'${s}')">
+                ${icones[s]} ${s.charAt(0).toUpperCase()+s.slice(1)}
+              </button>`;
+            }).join('')}
           </div>
           <div class="orc-card-actions">
-            <button class="orc-act-btn orc-act-editar" onclick="histEditar(${orc.id})">✏️ Editar</button>
-            <button class="orc-act-btn orc-act-dupl"   onclick="histDuplicar(${orc.id})">📋 Duplicar</button>
+            <button class="orc-act-btn orc-act-editar"  onclick="histEditar(${orc.id})">✏️ Editar</button>
+            <button class="orc-act-btn orc-act-dupl"    onclick="histDuplicar(${orc.id})">📋 Duplicar</button>
             <button class="orc-act-btn orc-act-excluir" onclick="histExcluir(${orc.id})">🗑️ Excluir</button>
           </div>
         </div>
-      `:''}
+      ` : ''}
     </div>
   `;
+}
+
+async function histSetStatus(id, novoStatus) {
+  const orc = histState.orcamentos.find(o => o.id === id);
+  if (!orc) return;
+  try {
+    const atualizado = { ...orc, status: novoStatus };
+    await atualizarOrcamento(atualizado);
+    const idx = histState.orcamentos.findIndex(o => o.id === id);
+    if (idx >= 0) histState.orcamentos[idx] = atualizado;
+    histRenderLista();
+    histMostrarToast('✅ Status atualizado: ' + novoStatus);
+  } catch(e) { histMostrarToast('❌ Erro ao atualizar status'); }
 }
 
 function histToggleExpand(id) {

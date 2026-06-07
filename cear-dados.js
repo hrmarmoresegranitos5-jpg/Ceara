@@ -42,6 +42,22 @@ const COMERCIAL_DEF = {
   roldana:              10,  // R$ cada roldana
 };
 
+const ACESSORIOS_DEF = {
+  kit_pivotante:     150,
+  kit_jumbo:         350,
+  kit_janela_2:      100,
+  kit_janela_4:      110,
+  kit_basculante:    150,
+  puxador:           100,
+  fixador:            60,
+  fechadura_vp:      150,
+  fechadura_vv:      180,
+  fechadura_macaret: 180,
+  contra_fechadura:   50,
+  bate_vp:            50,
+  bate_vv:            80,
+};
+
 const EMPRESA_DEF = {
   nome:      'Ceará Planejados',
   subtitulo: 'Vidraçaria · Marcenaria · Serralheria',
@@ -80,6 +96,13 @@ function loadCFG() {
   CFG.comercial = {};
   for (const k in COMERCIAL_DEF) {
     CFG.comercial[k] = co[k] ?? COMERCIAL_DEF[k];
+  }
+
+  // Acessórios e ferragens
+  const ac = saved.acessorios || {};
+  CFG.acessorios = {};
+  for (const k in ACESSORIOS_DEF) {
+    CFG.acessorios[k] = ac[k] ?? ACESSORIOS_DEF[k];
   }
 
   // Empresa

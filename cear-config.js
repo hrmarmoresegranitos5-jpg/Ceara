@@ -152,6 +152,7 @@ function renderConfig(wrap) {
         campo('comercial.desconto_avista',    co.desconto_avista,       'Desconto à vista',  '', '%', 0.1),
         campo('comercial.frete_gratis_km',    co.frete_gratis_km,       'Frete grátis até',  '', 'km'),
         campo('comercial.frete_por_km_extra', co.frete_por_km_extra,    'Frete extra',       'R$', '/km', 0.5),
+        campo('comercial.validade_dias',      co.validade_dias||7,      'Validade orçamento','', 'dias'),
       ])
     )}
 
@@ -182,6 +183,14 @@ function cfgMark() {
 function cfgSalvar() {
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem('ceara_cfg') || '{}'); } catch(e) {}
+
+  // Pre-seed: para cada namespace presente no CFG atual, garante que 'saved'
+  // já tenha todas as chaves — assim subchaves não exibidas na tela não são apagadas.
+  ['empresa','vidros','correr','comercial','acessorios'].forEach(ns => {
+    if (CFG[ns] && typeof CFG[ns] === 'object') {
+      saved[ns] = Object.assign({}, CFG[ns], saved[ns] || {});
+    }
+  });
 
   document.querySelectorAll('#pgConfig [data-key]').forEach(el => {
     const keys  = el.dataset.key.split('.');

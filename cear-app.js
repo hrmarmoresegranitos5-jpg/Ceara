@@ -302,8 +302,27 @@ function initApp() {
       }
     } catch(e) {}
 
-    // Service Worker
-    if ('serviceWorker' in navigator) {
+    // ── Indicador offline ────────────────────────────────────
+    function _atualizarOfflineBanner() {
+      var el = document.getElementById('offlineBanner');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'offlineBanner';
+        el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;' +
+          'background:rgba(220,100,60,.95);color:#fff;font-size:.72rem;font-weight:700;' +
+          'text-align:center;padding:5px 12px;letter-spacing:.03em;' +
+          'transform:translateY(-100%);transition:transform 200ms ease;pointer-events:none;';
+        document.body.appendChild(el);
+      }
+      var online = navigator.onLine;
+      el.textContent = '📡 Sem conexão — dados locais';
+      el.style.transform = online ? 'translateY(-100%)' : 'translateY(0)';
+    }
+    _atualizarOfflineBanner();
+    window.addEventListener('online',  _atualizarOfflineBanner);
+    window.addEventListener('offline', _atualizarOfflineBanner);
+
+
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('service-worker.js').catch(()=>{});
       });

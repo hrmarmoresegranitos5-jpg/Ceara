@@ -8,6 +8,22 @@ function formatBRL(v) {
 
 function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, pivFolhas, kitPivotante, temFixo, fixoLarg, temBandeirola, bandH, temMola, puxadoresQtd, janelaFolhas, kitCor, molaQtd, boxTipo, largB, puxadoresCorrerQtd }) {
   if (!larg || !alt || isNaN(larg) || isNaN(alt)) return null;
+
+  // ── Dimensões mínimas por tipo ───────────────────────────────
+  const MINS = {
+    pivotante:  { larg:40, alt:80,  msg:'Porta pivotante: mín. 40×80cm' },
+    correr:     { larg:60, alt:100, msg:'Porta de correr: mín. 60×100cm' },
+    janela:     { larg:30, alt:30,  msg:'Janela: mín. 30×30cm' },
+    box:        { larg:40, alt:100, msg:'Box: mín. 40×100cm' },
+    espelho:    { larg:20, alt:20,  msg:'Espelho: mín. 20×20cm' },
+    basculante: { larg:30, alt:20,  msg:'Basculante: mín. 30×20cm' },
+    guarda:     { larg:60, alt:60,  msg:'Guarda corpo: mín. 60×60cm' },
+    comum:      { larg:10, alt:10,  msg:'Vidro: mín. 10×10cm' },
+  };
+  const min = MINS[tipo];
+  if (min && (larg < min.larg || alt < min.alt)) {
+    return { erro: min.msg, linhas:[], total:0, totalAvista:0 };
+  }
   const linhas = []; let total = 0, descontoBase = 0;
   const area = (larg/100)*(alt/100);
   const vidroObj = VIDROS[vidro];
@@ -46,7 +62,7 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
 
     // Fechadura VP ou VV
     const vpvv   = nMoveis <= 1 ? 'VP' : 'VV';
-    const fPreco = nMoveis <= 1 ? CFG.correr.fechadura : (CFG.acessorios?.fechadura_vv || 180);
+    const fPreco = nMoveis <= 1 ? CFG.correr.fechadura : CFG.acessorios.fechadura_vv;
     linhas.push({ nome: 'Fechadura ' + vpvv, valor: fPreco });
     total += fPreco;
     descontoBase += fPreco;
@@ -54,7 +70,7 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
     // Puxador (opcional, 1 ou 2)
     if (accs && accs.puxador) {
       const nPux = Number(puxadoresCorrerQtd) || 1;
-      const valPux = nPux * 100;
+      const valPux = nPux * CFG.acessorios.puxador;
       linhas.push({ nome: 'Puxador ×' + nPux, valor: valPux });
       total += valPux;
       descontoBase += valPux;
@@ -102,7 +118,7 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
     total += valRolJ;
 
     // Bate-fecha VP ou VV
-    const bfPreco = nFj===4 ? (CFG.acessorios?.bate_vv||80) : (CFG.acessorios?.bate_vp||50);
+    const bfPreco = nFj===4 ? CFG.acessorios.bate_vv : CFG.acessorios.bate_vp;
     const bfNome  = nFj===4 ? 'Bate-fecha VV' : 'Bate-fecha VP';
     linhas.push({ nome: bfNome, valor: bfPreco });
     total += bfPreco;
@@ -165,7 +181,7 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
   if (tipo === 'pivotante') {
     // Kit (comum ou jumbo) — 2 folhas = 2 kits
     const nKits    = (pivFolhas||1) === 2 ? 2 : 1;
-    const kitUnit  = kitPivotante === 'jumbo' ? 350 : 150;
+    const kitUnit  = kitPivotante === 'jumbo' ? CFG.acessorios.kit_jumbo : CFG.acessorios.kit_pivotante;
     const kitPreco = kitUnit * nKits;
     const kitNome  = kitPivotante === 'jumbo'
       ? 'Kit Jumbo ×' + nKits
@@ -177,7 +193,7 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
     // Puxador
     if (accs && accs.puxador) {
       const nPux = Number(puxadoresQtd) || 1;
-      const valPux = nPux * 100;
+      const valPux = nPux * CFG.acessorios.puxador;
       linhas.push({ nome: 'Puxador ×' + nPux, valor: valPux });
       total += valPux;
       descontoBase += valPux;
@@ -185,23 +201,24 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
 
     // Fixador
     if (accs && accs.fixador) {
-      linhas.push({ nome: 'Fixador', valor: 60 });
-      total += 60;
-      descontoBase += 60;
+      linhas.push({ nome: 'Fixador', valor: CFG.acessorios.fixador });
+      total += CFG.acessorios.fixador;
+      descontoBase += CFG.acessorios.fixador;
     }
 
     // Ferrolho — obrigatório em 2 folhas (2 unidades)
     if ((pivFolhas||1) === 2) {
-      linhas.push({ nome: 'Ferrolho (2×)', valor: 120 });
-      total += 120;
-      descontoBase += 120;
+      const ferrolhoVal = CFG.acessorios.contra_fechadura * 2;
+      linhas.push({ nome: 'Ferrolho (2×)', valor: ferrolhoVal });
+      total += ferrolhoVal;
+      descontoBase += ferrolhoVal;
     }
 
     // Contra fechadura (2 folhas)
     if ((pivFolhas||1) === 2) {
-      linhas.push({ nome: 'Contra fechadura', valor: 50 });
-      total += 50;
-      descontoBase += 50;
+      linhas.push({ nome: 'Contra fechadura', valor: CFG.acessorios.contra_fechadura });
+      total += CFG.acessorios.contra_fechadura;
+      descontoBase += CFG.acessorios.contra_fechadura;
     }
   } else {
     (ACESSORIOS_CONFIG[tipo] || []).forEach(a => {
@@ -275,6 +292,33 @@ function gerarTextoWpp({ cliente, tipo, larg, alt, vidro, resultado, folhasCorre
   txt += `\n*Composição:*\n`;
   resultado.linhas.forEach(l => txt += `• ${l.nome}: ${formatBRL(l.valor)}\n`);
   txt += `\n💰 *Total: ${formatBRL(resultado.total)}*\n💚 À vista (10% off): *${formatBRL(resultado.totalAvista)}*\n\n_Orçamento gerado pelo app Ceará Planejados_`;
+  return txt;
+}
+
+function gerarTextoWppMulti({ cliente, fone, itens }) {
+  if (!itens || !itens.length) return '';
+  const dataStr = new Date().toLocaleDateString('pt-BR');
+  const totalGeral = itens.reduce((s, it) => s + (it.resultado?.total || 0) * (it.qty || 1), 0);
+  const totalAvista = itens.reduce((s, it) => s + (it.resultado?.totalAvista || it.resultado?.total || 0) * (it.qty || 1), 0);
+
+  let txt = `*Orçamento — Ceará Planejados*\n📅 ${dataStr}\n`;
+  if (cliente) txt += `👤 Cliente: ${cliente}\n`;
+  txt += `\n*${itens.length} item${itens.length !== 1 ? 'ns' : ''}:*\n`;
+
+  itens.forEach((it, i) => {
+    const snap = it.snap || {};
+    const tl   = TIPO_LABEL[snap.tipo] || snap.tipo || '';
+    const dim  = (snap.larg && snap.alt) ? `${snap.larg}×${snap.alt} cm` : '';
+    const vidroObj = snap.vidroKey ? VIDROS[snap.vidroKey] : null;
+    const subtotal = (it.resultado?.total || 0) * (it.qty || 1);
+    txt += `\n*${i + 1}. ${it.qty > 1 ? it.qty + '× ' : ''}${tl}${dim ? ' ' + dim : ''}*`;
+    if (vidroObj) txt += ` · ${vidroObj.nome}`;
+    txt += `\n   💰 ${formatBRL(subtotal)}\n`;
+  });
+
+  txt += `\n💰 *Total: ${formatBRL(totalGeral)}*`;
+  if (totalAvista < totalGeral) txt += `\n💚 À vista (10% off): *${formatBRL(totalAvista)}*`;
+  txt += `\n\n_Orçamento gerado pelo app Ceará Planejados_`;
   return txt;
 }
 
