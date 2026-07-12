@@ -611,6 +611,7 @@ function orcEnviarEmail() {
   closeModal();
 }
 
+function orcGerarPDF() {
   closeModal();
   // Se houver itens no orçamento multi, usa o gerador multi
   if (orcItens && orcItens.length > 0) {
