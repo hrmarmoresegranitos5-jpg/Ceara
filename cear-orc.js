@@ -610,7 +610,7 @@ function orcEnviarEmail() {
   window.open('mailto:?subject=' + assunto + '&body=' + corpo, '_blank');
   closeModal();
 }
-
+function orcGerarPDF() {
   closeModal();
   // Se houver itens no orçamento multi, usa o gerador multi
   if (orcItens && orcItens.length > 0) {
