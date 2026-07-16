@@ -1144,11 +1144,18 @@ input[type=date] { color-scheme:dark; }
 <script>
 (function(){
   function mostrarErro(txt){
+    var existente = document.getElementById('__debugBanner');
+    if (existente) { existente.textContent += '\n\n---\n\n' + txt; return; }
     var d = document.createElement('div');
+    d.id = '__debugBanner';
     d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#c00;color:#fff;font-size:11px;line-height:1.5;padding:10px;white-space:pre-wrap;font-family:monospace;max-height:60vh;overflow:auto;';
     d.textContent = txt;
     document.body.appendChild(d);
   }
+  window.mostrarErro = mostrarErro;
+  window.__scriptFail = function(src){
+    mostrarErro('ARQUIVO NÃO CARREGOU (404 ou bloqueado):\n' + src);
+  };
   window.onerror = function(msg, url, line, col){
     mostrarErro('ERRO JS:\n' + msg + '\nArquivo: ' + url + '\nLinha: ' + line + ' Coluna: ' + col);
   };
@@ -1191,23 +1198,38 @@ input[type=date] { color-scheme:dark; }
 <div id="modalContainer"></div>
 
 <!-- ── PDF libs ── -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
 
 <!-- ── Scripts — mesma ordem que o HR Mármores ── -->
-<script src="cear-logo.js?v=1"></script>
-<script src="cear-dados.js?v=2"></script>
-<script src="cear-db.js?v=2"></script>
-<script src="cear-helpers.js?v=2"></script>
-<script src="cear-home.js?v=2"></script>
-<script src="cear-cad.js?v=2"></script>
-<script src="cear-orc.js?v=2"></script>
-<script src="cear-financeiro.js?v=2"></script>
-<script src="cear-historico.js?v=2"></script>
-<script src="cear-clientes.js?v=2"></script>
-<script src="cear-config.js?v=2"></script>
-<script src="cear-modais.js?v=2"></script>
-<script src="cear-app.js?v=2"></script>
+<script src="cear-logo.js?v=1" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+<script src="cear-dados.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+<script src="cear-db.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+<script src="cear-helpers.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+<script src="cear-home.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+<script src="cear-cad.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+<script src="cear-orc.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+<script src="cear-financeiro.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+<script src="cear-historico.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+<script src="cear-clientes.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+<script src="cear-config.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+<script src="cear-modais.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+<script src="cear-app.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+
+<script>
+(function(){
+  setTimeout(function(){
+    var sApp = document.getElementById('sApp');
+    var visivel = sApp && sApp.style.display !== 'none' && sApp.innerHTML && sApp.innerHTML.trim().length > 50;
+    var jaMostrouErro = document.getElementById('__debugBanner');
+    if (!visivel && !jaMostrouErro) {
+      var funcs = ['initApp','buildNav','renderPage','showSplash','NAV_ITEMS','LOGO_B64','renderHome','loadCFG'];
+      var status = funcs.map(function(f){ return f + ': ' + (typeof window[f] !== 'undefined' ? 'OK' : 'AUSENTE'); }).join('\n');
+      window.mostrarErro('NADA RENDERIZOU APÓS 5s.\n\nStatus das funções/variáveis principais:\n' + status + '\n\nsApp existe: ' + (!!sApp) + '\nsApp display: ' + (sApp ? sApp.style.display : 'n/a') + '\nsApp conteúdo (chars): ' + (sApp ? sApp.innerHTML.length : 'n/a'));
+    }
+  }, 5000);
+})();
+</script>
 
 </body>
 </html>
