@@ -1141,6 +1141,23 @@ input[type=date] { color-scheme:dark; }
 
 <body>
 
+<script>
+(function(){
+  function mostrarErro(txt){
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#c00;color:#fff;font-size:11px;line-height:1.5;padding:10px;white-space:pre-wrap;font-family:monospace;max-height:60vh;overflow:auto;';
+    d.textContent = txt;
+    document.body.appendChild(d);
+  }
+  window.onerror = function(msg, url, line, col){
+    mostrarErro('ERRO JS:\n' + msg + '\nArquivo: ' + url + '\nLinha: ' + line + ' Coluna: ' + col);
+  };
+  window.addEventListener('unhandledrejection', function(e){
+    mostrarErro('PROMISE REJEITADA:\n' + (e.reason && e.reason.stack || e.reason));
+  });
+})();
+</script>
+
 <div id="sApp">
   <div id="pwaInstallBanner">
     <span class="pib-ic">⬇️</span>
