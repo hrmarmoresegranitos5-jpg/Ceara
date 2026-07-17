@@ -593,7 +593,7 @@ function _calcVidroFixo(s) {
   var km = parseFloat(s.km)||0;
   if (km<=0) linhas.push({nome:'Frete (0 km)', valor:0});
   var total = custoVidro+extra;
-  return {total:total, totalAvista:total, linhas:linhas};
+  return {total:total, totalAvista:total*0.9, linhas:linhas};
 }
 
 // ── Cálculo e resultado ───────────────────────────────────────
