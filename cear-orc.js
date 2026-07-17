@@ -30,12 +30,19 @@ function _togAccObr(id) { orcToggleAcc(id, true); }
 // ════════════════════════════════════════════════════════════
 // ÁREAS — agrupamento profissional dos tipos de item
 // ════════════════════════════════════════════════════════════
+var _AREA_SVG = {
+  portas:  '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2.5" width="14" height="19" rx="1"/><line x1="5" y1="21.5" x2="19" y2="21.5"/><circle cx="15.3" cy="12" r="0.9" fill="currentColor" stroke="none"/></svg>',
+  janelas: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="1"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="3.5" y1="12" x2="20.5" y2="12"/></svg>',
+  box:     '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="10.5" height="17" rx="1"/><rect x="10" y="3.5" width="10.5" height="17" rx="1" opacity=".55"/></svg>',
+  outros:  '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><line x1="8" y1="16.5" x2="16.5" y2="8"/></svg>',
+};
 var AREAS = [
-  { id:'portas',  nome:'Portas',          icon:'🚪', desc:'Pivotante e de correr',              tipos:['pivotante','correr'] },
-  { id:'janelas', nome:'Janelas',         icon:'🪟', desc:'Janela e basculante',                 tipos:['janela','basculante'] },
-  { id:'box',     nome:'Box de Banheiro', icon:'🛁', desc:'Fixo, convencional, canto',           tipos:['box'] },
-  { id:'outros',  nome:'Outros',          icon:'✨', desc:'Espelho, guarda-corpo, vidro comum',  tipos:['espelho','guarda','comum'] },
+  { id:'portas',  nome:'Portas',          icon:'🚪', desc:'Pivotante e de correr',              tipos:['pivotante','correr'],           cor:'rgba(212,175,55,0.14)',  borda:'rgba(212,175,55,0.3)',  fg:'#EDD060' },
+  { id:'janelas', nome:'Janelas',         icon:'🪟', desc:'Janela e basculante',                 tipos:['janela','basculante'],          cor:'rgba(80,160,220,0.14)',  borda:'rgba(80,160,220,0.32)', fg:'rgba(120,190,240,1)' },
+  { id:'box',     nome:'Box de Banheiro', icon:'🛁', desc:'Fixo, convencional, canto',           tipos:['box'],                          cor:'rgba(58,158,106,0.14)',  borda:'rgba(58,158,106,0.32)', fg:'rgba(100,200,150,1)' },
+  { id:'outros',  nome:'Outros',          icon:'✨', desc:'Espelho, guarda-corpo, vidro comum',  tipos:['espelho','guarda','comum'],     cor:'rgba(180,120,220,0.14)', borda:'rgba(180,120,220,0.32)', fg:'rgba(200,150,230,1)' },
 ];
+AREAS.forEach(function(a){ a.svg = _AREA_SVG[a.id] || a.icon; });
 function _areaOfTipo(tipo) {
   for (var i=0;i<AREAS.length;i++) if (AREAS[i].tipos.indexOf(tipo)>=0) return AREAS[i].id;
   return AREAS[0].id;
@@ -45,30 +52,79 @@ function _areaObj(id) {
   return null;
 }
 var orcArea = null; // null = mostra a tela de escolha de área
+var _orcTouched = false; // true assim que o usuário mexe em algum campo do formulário atual
+var _orcAnimDir = null; // 'right' = avançando (área→form), 'left' = voltando (form→área)
+
+// ── Uso por área (pra destacar "Mais usado") ──
+function _orcAreaUsageGet() {
+  try { return JSON.parse(localStorage.getItem('cearAreaUsage')||'{}'); } catch(e) { return {}; }
+}
+function _orcAreaUsageBump(id) {
+  try {
+    var u = _orcAreaUsageGet();
+    u[id] = (u[id]||0) + 1;
+    localStorage.setItem('cearAreaUsage', JSON.stringify(u));
+  } catch(e) {}
+}
+function _orcAreaMaisUsada() {
+  var u = _orcAreaUsageGet();
+  var total = 0, bestId = null, bestN = 0;
+  Object.keys(u).forEach(function(id){ total += u[id]; if (u[id] > bestN) { bestN = u[id]; bestId = id; } });
+  // só destaca se já houver um histórico mínimo e uma liderança clara (>=40% do uso total)
+  if (total >= 4 && bestId && bestN / total >= 0.4) return bestId;
+  return null;
+}
+
 function orcSelecionarArea(id) {
   orcArea = id;
+  _orcAnimDir = 'right';
+  _orcAreaUsageBump(id);
   var area = _areaObj(id);
   if (area && area.tipos.indexOf(orcState.tipo)===-1) orcTrocaTipo(area.tipos[0]);
   else renderOrc(document.getElementById('pgWrap'));
 }
 function orcVoltarArea() {
   orcArea = null;
+  _orcAnimDir = 'left';
   renderOrc(document.getElementById('pgWrap'));
 }
 function _renderOrcAreaPicker(wrap) {
   var cards = '';
-  AREAS.forEach(function(a){
-    cards += '<button class="orc-area-card" onclick="orcSelecionarArea(\''+a.id+'\')">'
-      + '<span class="orc-area-ic">'+a.icon+'</span>'
-      + '<div class="orc-area-txt"><span class="orc-area-nm">'+a.nome+'</span>'
+  var maisUsada = _orcAreaMaisUsada();
+  AREAS.forEach(function(a, i){
+    var qtdTipos = a.tipos.length;
+    var destaque = (a.id === maisUsada) ? '<span class="orc-area-tag">Mais usado</span>' : '';
+    cards += '<button class="orc-area-card" style="animation-delay:'+(i*45)+'ms;--stripe-color:'+a.fg+'" onclick="orcSelecionarArea(\''+a.id+'\')">'
+      + '<span class="orc-area-ic" style="background:'+a.cor+';border:1px solid '+a.borda+';color:'+a.fg+'">'+a.svg+'</span>'
+      + '<div class="orc-area-txt"><span class="orc-area-nm">'+a.nome+destaque+'</span>'
       + '<span class="orc-area-desc">'+a.desc+'</span></div>'
-      + '<span class="orc-area-arr">›</span>'
+      + '<span class="orc-area-arr" style="color:'+a.fg+'">›</span>'
       + '</button>';
   });
-  wrap.innerHTML = '<div id="pgOrcamento">'
+  var _animClass = _orcAnimDir==='left' ? ' orc-slide-in-left' : (_orcAnimDir==='right' ? '' : '');
+  _orcAnimDir = null;
+
+  // ── Atalho "Continuar" (item em andamento, ainda não adicionado à lista) ──
+  var continuarBlock = '';
+  if (_orcTouched && orcState.larg > 0 && orcState.alt > 0) {
+    var descCont = (TIPO_LABEL[orcState.tipo]||orcState.tipo)+' '+orcState.larg+'×'+orcState.alt+' cm';
+    continuarBlock = '<button class="orc-continuar" onclick="orcSelecionarArea(\''+_areaOfTipo(orcState.tipo)+'\')">'
+      + '<span class="orc-continuar-ic">↻</span>'
+      + '<div class="orc-continuar-txt"><span class="orc-continuar-lbl">Continuar de onde parou</span>'
+      + '<span class="orc-continuar-desc">'+descCont+'</span></div>'
+      + '<span class="orc-continuar-arr">›</span>'
+      + '</button>';
+  }
+
+  wrap.innerHTML = '<div id="pgOrcamento" class="orc-screen'+_animClass+'">'
+    + '<div class="orc-area-hero">'
+    + '<span class="orc-area-hero-ic">🧮</span>'
     + '<div class="orc-area-ttl">O que você vai orçar?</div>'
-    + '<div class="orc-area-sub">Escolha a área para começar</div>'
+    + '<div class="orc-area-sub">Escolha a área para começar um novo item</div>'
+    + '</div>'
+    + continuarBlock
     + '<div class="orc-area-grid">'+cards+'</div>'
+    + (orcItens.length ? '' : '<div class="orc-area-empty"><span class="orc-area-empty-ic">📋</span>Nenhum orçamento ainda — comece escolhendo uma área acima</div>')
     + '<div style="height:24px"></div>'
     + '</div>';
 }
@@ -112,13 +168,27 @@ function renderOrc(wrap) {
       +' <button class="orc-edit-cancel" onclick="orcCancelarEdicao()">Cancelar</button></div>';
   }
 
-  // ── Breadcrumb da área ──
+  // ── Breadcrumb: Área → Tipo → Medidas ──
   var areaAtual = _areaObj(orcArea);
-  var areaCrumb = '<button class="orc-area-crumb" onclick="orcVoltarArea()">'
-    + '<span class="orc-area-crumb-ic">'+(areaAtual?areaAtual.icon:'')+'</span>'
-    + '<span class="orc-area-crumb-lbl">'+(areaAtual?areaAtual.nome:'')+'</span>'
-    + '<span class="orc-area-crumb-arr">↺ trocar área</span>'
-    + '</button>';
+  var tipoAtual = TIPOS.filter(function(x){return x.id===s.tipo;})[0];
+  var areaCrumb = '<div class="orc-crumb-row">'
+    + '<div class="orc-crumb-steps">'
+    + '<button class="orc-crumb-step" onclick="orcVoltarArea()" title="Trocar área">'
+      + '<span class="orc-crumb-ic" style="color:'+(areaAtual?areaAtual.fg:'inherit')+'">'+(areaAtual?areaAtual.svg:'')+'</span>'
+      + '<span class="orc-crumb-txt">'+(areaAtual?areaAtual.nome:'')+'</span>'
+    + '</button>'
+    + '<span class="orc-crumb-sep">›</span>'
+    + '<span class="orc-crumb-step is-static">'
+      + '<span class="orc-crumb-ic">'+(tipoAtual?tipoAtual.icon:'')+'</span>'
+      + '<span class="orc-crumb-txt">'+(tipoAtual?tipoAtual.label:'')+'</span>'
+    + '</span>'
+    + '<span class="orc-crumb-sep">›</span>'
+    + '<span class="orc-crumb-step is-current">'
+      + '<span class="orc-crumb-txt">Medidas</span>'
+    + '</span>'
+    + '</div>'
+    + (orcItens.length ? '<span class="orc-crumb-badge">'+orcItens.length+' item'+(orcItens.length>1?'s':'')+'</span>' : '')
+    + '</div>';
 
   // ── Seletor tipo (somente os tipos da área atual) ──
   var tipoBlock = '';
@@ -294,7 +364,9 @@ function renderOrc(wrap) {
   var itensBlock = _renderItens();
 
   // ── Montar ──
-  wrap.innerHTML = '<div id="pgOrcamento">'
+  var _animClass2 = _orcAnimDir==='right' ? ' orc-slide-in-right' : '';
+  _orcAnimDir = null;
+  wrap.innerHTML = '<div id="pgOrcamento" class="orc-screen'+_animClass2+'">'
     + areaCrumb
     + clienteBlock
     + editBanner
@@ -377,6 +449,7 @@ function orcAdicionarItem() {
   var fone    = orcState.fone;
 
   // Reset COMPLETO — dimensões vão para 0 para deixar claro que é um novo item
+  _orcTouched = false;
   orcState.tipo            = 'pivotante';
   orcState.larg            = 0;
   orcState.alt             = 0;
@@ -438,7 +511,7 @@ function orcRemoverItem(idx) {
 }
 
 function orcLimparItens() {
-  orcItens=[]; orcEditIdx=-1;
+  orcItens=[]; orcEditIdx=-1; _orcTouched=false;
   renderOrc(document.getElementById('pgWrap'));
 }
 
@@ -490,6 +563,7 @@ function orcCalcAndRender() {
 
 function orcUpdate() {
   var s=orcState;
+  _orcTouched = true;
   s.larg    = parseFloat(document.getElementById('orcLarg')?.value)||0;
   s.alt     = parseFloat(document.getElementById('orcAlt')?.value)||0;
   s.vidroKey= document.getElementById('orcVidro')?.value||s.vidroKey;

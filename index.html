@@ -320,36 +320,110 @@ input[type=date] { color-scheme:dark; }
 .campo-row .field { flex:1; }
 
 /* ── Orçamento: escolha de área (Portas/Janelas/Box/Outros) ── */
-.orc-area-ttl { font-size:1.3rem;font-weight:800;color:var(--tx);letter-spacing:-.01em;margin:6px 0 4px; }
-.orc-area-sub { font-size:.9rem;color:var(--t3);margin-bottom:20px; }
+.orc-area-hero { text-align:center;padding:8px 0 22px; }
+.orc-area-hero-ic {
+  display:inline-flex;align-items:center;justify-content:center;
+  width:56px;height:56px;border-radius:16px;font-size:1.6rem;
+  background:var(--gold4);border:1px solid rgba(212,175,55,0.25);
+  margin-bottom:14px;
+}
+.orc-area-ttl { font-size:1.3rem;font-weight:800;color:var(--tx);letter-spacing:-.01em;margin:0 0 5px; }
+.orc-area-sub { font-size:.9rem;color:var(--t3); }
 .orc-area-grid { display:flex;flex-direction:column;gap:12px; }
+@media (min-width:640px) {
+  .orc-area-grid { display:grid;grid-template-columns:1fr 1fr;gap:14px; }
+  .orc-area-card { flex-direction:column;align-items:flex-start;text-align:left;padding:22px 20px; }
+  .orc-area-arr { position:absolute;top:18px;right:18px; }
+  .orc-continuar { max-width:520px; }
+}
 .orc-area-card {
+  position:relative;overflow:hidden;
   display:flex;align-items:center;gap:16px;width:100%;text-align:left;
   padding:20px 18px;background:linear-gradient(160deg,var(--s2),var(--s1));
   border:1px solid rgba(255,255,255,0.08);border-radius:18px;cursor:pointer;outline:none;
   -webkit-tap-highlight-color:transparent;touch-action:manipulation;
   transition:transform 130ms cubic-bezier(.34,1.56,.64,1), background 110ms ease, border-color 110ms ease, box-shadow 130ms ease;
   box-shadow:var(--shadow-sm);
+  animation:slideUp 220ms cubic-bezier(.25,.46,.45,.94) both;
+}
+.orc-area-card::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:var(--stripe-color,transparent);
 }
 .orc-area-card:active { transform:scale(.97);background:var(--s3);border-color:rgba(212,175,55,0.25); }
-.orc-area-ic { font-size:2.1rem;width:64px;height:64px;border-radius:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--gold4);border:1px solid rgba(212,175,55,0.2); }
+.orc-area-ic { font-size:2.1rem;width:64px;height:64px;border-radius:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center; }
+.orc-area-ic svg { width:28px;height:28px; }
 .orc-area-txt { flex:1;min-width:0;display:flex;flex-direction:column;gap:3px; }
 .orc-area-nm { font-size:1.15rem;font-weight:700;color:var(--tx);letter-spacing:-.01em; }
-.orc-area-desc { font-size:.82rem;color:var(--t3); }
-.orc-area-arr { font-size:1.5rem;color:rgba(212,175,55,0.5);font-weight:800;flex-shrink:0; }
-
-/* ── Orçamento: breadcrumb da área ── */
-.orc-area-crumb {
-  display:flex;align-items:center;gap:10px;width:100%;
-  padding:12px 14px;margin-bottom:16px;
-  background:var(--gold4);border:var(--border-g);border-radius:14px;
-  cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent;
-  font-family:'Outfit',sans-serif;transition:transform 120ms ease;
+.orc-area-tag {
+  display:inline-block;margin-left:8px;vertical-align:middle;
+  font-size:.62rem;font-weight:700;letter-spacing:.02em;color:var(--gold);
+  background:var(--gold3);border:1px solid rgba(212,175,55,0.3);
+  border-radius:20px;padding:3px 8px;
 }
-.orc-area-crumb:active { transform:scale(.98); }
-.orc-area-crumb-ic { font-size:1.3rem;flex-shrink:0; }
-.orc-area-crumb-lbl { font-size:1rem;font-weight:700;color:var(--tx);flex:1;text-align:left; }
-.orc-area-crumb-arr { font-size:.78rem;font-weight:600;color:var(--gold1); }
+.orc-area-desc { font-size:.82rem;color:var(--t3); }
+.orc-area-arr { font-size:1.5rem;font-weight:800;flex-shrink:0; }
+.orc-area-empty {
+  display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;
+  padding:26px 20px 6px;color:var(--t4);font-size:.85rem;line-height:1.4;
+}
+.orc-area-empty-ic { font-size:1.6rem;opacity:.6; }
+
+.orc-continuar {
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  padding:14px 16px;margin-bottom:16px;background:var(--gold4);
+  border:var(--border-g);border-radius:16px;cursor:pointer;outline:none;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  transition:transform 120ms ease;
+}
+.orc-continuar:active { transform:scale(.98); }
+.orc-continuar-ic { font-size:1.3rem;color:var(--gold);flex-shrink:0; }
+.orc-continuar-txt { flex:1;min-width:0;display:flex;flex-direction:column;gap:2px; }
+.orc-continuar-lbl { font-size:.72rem;font-weight:700;color:var(--gold);letter-spacing:.02em; }
+.orc-continuar-desc { font-size:.92rem;font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.orc-continuar-arr { font-size:1.3rem;font-weight:800;color:var(--gold1);flex-shrink:0; }
+
+/* ── Orçamento: breadcrumb 3 passos (Área → Tipo → Medidas) ── */
+.orc-crumb-row {
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-bottom:16px;
+}
+.orc-crumb-steps {
+  display:flex;align-items:center;gap:6px;overflow-x:auto;min-width:0;
+  scrollbar-width:none;
+}
+.orc-crumb-steps::-webkit-scrollbar { display:none; }
+.orc-crumb-badge {
+  flex-shrink:0;font-size:.72rem;font-weight:700;color:var(--gold);
+  background:var(--gold3);border:1px solid rgba(212,175,55,0.25);
+  border-radius:20px;padding:5px 11px;white-space:nowrap;
+}
+.orc-crumb-step {
+  display:flex;align-items:center;gap:6px;flex-shrink:0;
+  padding:9px 12px;border-radius:12px;font-family:'Outfit',sans-serif;
+  background:var(--s2);border:1px solid rgba(255,255,255,0.06);
+  cursor:default;outline:none;-webkit-tap-highlight-color:transparent;
+  transition:transform 120ms ease;
+}
+button.orc-crumb-step { cursor:pointer; }
+button.orc-crumb-step:active { transform:scale(.96); }
+.orc-crumb-step.is-static { background:transparent;border-color:transparent;opacity:.7; }
+.orc-crumb-step.is-current {
+  background:var(--gold4);border:var(--border-g);opacity:1;
+}
+.orc-crumb-ic { font-size:1.05rem;line-height:1;display:flex;align-items:center; }
+.orc-crumb-ic svg { width:15px;height:15px; }
+.orc-crumb-txt { font-size:.82rem;font-weight:700;color:var(--tx);white-space:nowrap; }
+.orc-crumb-step.is-static .orc-crumb-txt { color:var(--t3);font-weight:600; }
+.orc-crumb-step.is-current .orc-crumb-txt { color:var(--gold); }
+.orc-crumb-sep { font-size:.8rem;font-weight:700;color:var(--t4);flex-shrink:0; }
+
+/* ── Orçamento: transição suave entre telas (área ↔ formulário) ── */
+.orc-screen { animation:none; }
+.orc-screen.orc-slide-in-right { animation:orcSlideInRight 240ms cubic-bezier(.25,.46,.45,.94) both; }
+.orc-screen.orc-slide-in-left { animation:orcSlideInLeft 240ms cubic-bezier(.25,.46,.45,.94) both; }
+@keyframes orcSlideInRight { from{transform:translateX(28px);opacity:0;} to{transform:translateX(0);opacity:1;} }
+@keyframes orcSlideInLeft  { from{transform:translateX(-28px);opacity:0;} to{transform:translateX(0);opacity:1;} }
 
 /* ── Historico ── */
 .hist-wrap { display:flex;flex-direction:column;height:100%;overflow:hidden; }
@@ -1295,7 +1369,7 @@ input[type=date] { color-scheme:dark; }
 <script src="cear-helpers.js?v=2"></script>
 <script src="cear-home.js?v=3"></script>
 <script src="cear-cad.js?v=2"></script>
-<script src="cear-orc.js?v=4"></script>
+<script src="cear-orc.js?v=5"></script>
 <script src="cear-financeiro.js?v=2"></script>
 <script src="cear-historico.js?v=2"></script>
 <script src="cear-clientes.js?v=2"></script>
