@@ -47,10 +47,10 @@ async function renderHome(wrap) {
       <!-- BUSCA GLOBAL -->
       <div class="hm-section" style="animation:slideUp 175ms ease both;padding-bottom:0">
         <div class="hm-busca-global">
-          <span style="font-size:.95rem;opacity:.5">🔍</span>
+          <span style="font-size:1.05rem;opacity:.5">🔍</span>
           <input id="hmBuscaGlobal" type="text" placeholder="Buscar clientes ou orçamentos…"
                  autocomplete="off" oninput="hmBuscaGlobalInput(this.value)"
-                 style="flex:1;background:none;border:none;outline:none;color:var(--tx);font-size:.82rem;padding:0">
+                 style="flex:1;background:none;border:none;outline:none;color:var(--tx);font-size:.92rem;padding:0">
         </div>
         <div id="hmBuscaResultados" style="display:none;margin-top:6px"></div>
       </div>
@@ -59,18 +59,6 @@ async function renderHome(wrap) {
       <div class="hm-section" style="animation:slideUp 185ms ease both" id="hmStatsSection">
         <div class="hm-stats-grid" id="hmStatsGrid">
           ${['hmS1','hmS2','hmS3'].map(id=>`<div class="hm-stat-card hm-stat-loading" id="${id}"><div class="hm-stat-shimmer"></div></div>`).join('')}
-        </div>
-      </div>
-
-      <div class="hm-section" style="animation:slideUp 200ms ease both">
-        <div class="hm-section-lbl">Orçamento rápido</div>
-        <div class="hm-orc-grid">
-          ${ATALHOS.map((a,i) => `
-            <button class="hm-orc-btn" style="animation-delay:${i*30}ms;--hob-color:${a.borda};--hob-bg:${a.cor}" onclick="goOrc('${a.tipo}')">
-              <span class="hm-orc-ic">${a.icone}</span>
-              <span class="hm-orc-nm">${a.nome}</span>
-            </button>
-          `).join('')}
         </div>
       </div>
 
@@ -109,14 +97,17 @@ async function renderHome(wrap) {
     const vencidos = orcs.filter(_orcVencidoSimples).length;
     grid.innerHTML = `
       <div class="hm-stat-card" onclick="navTo('historico')">
+        <div class="hm-stat-ic">💰</div>
         <div class="hm-stat-val">${formatBRL(st.faturadoMes)}</div>
         <div class="hm-stat-lbl">Faturado em ${mes}</div>
       </div>
       <div class="hm-stat-card hm-stat-warn" onclick="navTo('historico')">
+        <div class="hm-stat-ic">⏳</div>
         <div class="hm-stat-val">${st.pendentes}${vencidos > 0 ? ` <span style="font-size:.6rem;color:rgba(220,100,40,1)">⚠️${vencidos}</span>` : ''}</div>
         <div class="hm-stat-lbl">Pendente${st.pendentes!==1?'s':''}${vencidos > 0 ? ` · ${vencidos} vencido${vencidos!==1?'s':''}` : ''}</div>
       </div>
       <div class="hm-stat-card" onclick="navTo('clientes')">
+        <div class="hm-stat-ic">👥</div>
         <div class="hm-stat-val">${st.totalClientes}</div>
         <div class="hm-stat-lbl">Cliente${st.totalClientes!==1?'s':''}</div>
       </div>
