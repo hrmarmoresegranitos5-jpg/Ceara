@@ -16,6 +16,7 @@ const MENU_CARDS = [
   { id:'financeiro', icone:'💎', nome:'Preços',      sub:'Tabela de vidros',    cor:'rgba(80,160,220,0.1)',  borda:'rgba(80,160,220,0.22)' },
   { id:'historico',  icone:'📂', nome:'Histórico',   sub:'Orçamentos salvos',   cor:'rgba(100,200,140,0.1)',borda:'rgba(100,200,140,0.22)' },
   { id:'clientes',   icone:'👥', nome:'Clientes',    sub:'Cadastro de clientes',cor:'rgba(160,120,220,0.1)',borda:'rgba(160,120,220,0.22)' },
+  { id:'relatorio',  icone:'📊', nome:'Relatório',   sub:'Resumo do mês',       cor:'rgba(212,175,55,0.13)', borda:'rgba(212,175,55,0.28)' },
   { id:'config',     icone:'⚙️', nome:'Config.',     sub:'Ajustes do sistema',  cor:'rgba(180,180,180,0.08)',borda:'rgba(180,180,180,0.15)' },
 ];
 
@@ -55,6 +56,18 @@ async function renderHome(wrap) {
         <div id="hmBuscaResultados" style="display:none;margin-top:6px"></div>
       </div>
 
+      <!-- CTA NOVO ORÇAMENTO -->
+      <div class="hm-section" style="animation:slideUp 180ms ease both">
+        <button class="hm-cta-btn" onclick="navTo('orc')">
+          <span class="hm-cta-ic">🧮</span>
+          <span class="hm-cta-txt">
+            <span class="hm-cta-nm">Novo Orçamento</span>
+            <span class="hm-cta-sub">Calcule um preço agora</span>
+          </span>
+          <span class="hm-menu-arr">›</span>
+        </button>
+      </div>
+
       <!-- STATS -->
       <div class="hm-section" style="animation:slideUp 185ms ease both" id="hmStatsSection">
         <div class="hm-stats-grid" id="hmStatsGrid">
@@ -62,17 +75,21 @@ async function renderHome(wrap) {
         </div>
       </div>
 
+      <!-- GRÁFICO FINANCEIRO -->
+      <div class="hm-section" style="animation:slideUp 210ms ease both" id="hmChartSection">
+        <div class="hm-chart-card hm-stat-loading" style="min-height:150px">
+          <div class="hm-stat-shimmer"></div>
+        </div>
+      </div>
+
       <div class="hm-section" style="animation:slideUp 240ms ease both">
         <div class="hm-section-lbl">Menu</div>
-        <div class="hm-menu-list">
+        <div class="hm-menu-grid">
           ${MENU_CARDS.map((m,i) => `
-            <button class="hm-menu-row" style="animation-delay:${i*35}ms" onclick="navTo('${m.id}')">
+            <button class="hm-menu-tile" style="animation-delay:${i*35}ms" onclick="${m.id==='relatorio' ? 'hmAbrirRelatorio()' : `navTo('${m.id}')`}">
               <span class="hm-menu-ic" style="background:${m.cor};border:1px solid ${m.borda}">${m.icone}</span>
-              <div class="hm-menu-txt">
-                <div class="hm-menu-nm">${m.nome}</div>
-                <div class="hm-menu-sub">${m.sub}</div>
-              </div>
-              <span class="hm-menu-arr">›</span>
+              <div class="hm-menu-nm">${m.nome}</div>
+              <div class="hm-menu-sub">${m.sub}</div>
             </button>
           `).join('')}
         </div>
@@ -135,22 +152,65 @@ async function renderHome(wrap) {
               </div>
             </div>
           </div>
-          <button class="hm-menu-row" onclick="hmAbrirRelatorio()" style="margin-top:10px;width:100%">
-            <span class="hm-menu-ic" style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.2)">📊</span>
-            <div class="hm-menu-txt">
-              <div class="hm-menu-nm">Relatório Mensal</div>
-              <div class="hm-menu-sub">Top produtos, ticket médio e evolução</div>
-            </div>
-            <span class="hm-menu-arr">›</span>
-          </button>
         `);
       }
+    }
+
+    // Gráfico de faturamento — últimos 6 meses
+    const chartSec = document.getElementById('hmChartSection');
+    if (chartSec) {
+      const serie = _hmUltimos6Meses(orcs);
+      const maxVal = Math.max(...serie.map(s => s.total), 1);
+      const temDados = serie.some(s => s.total > 0);
+      chartSec.innerHTML = `
+        <div class="hm-chart-card">
+          <div class="hm-chart-head">
+            <span>📈 Faturamento</span>
+            <span class="hm-chart-head-sub">Últimos 6 meses</span>
+          </div>
+          ${temDados ? `
+            <div class="hm-chart-bars">
+              ${serie.map(s => `
+                <div class="hm-chart-col" title="${formatBRL(s.total)}">
+                  <div class="hm-chart-val">${s.total > 0 ? formatBRLCompact(s.total) : ''}</div>
+                  <div class="hm-chart-bar-wrap">
+                    <div class="hm-chart-bar" style="height:${Math.max(4,(s.total/maxVal)*100)}%"></div>
+                  </div>
+                  <div class="hm-chart-mlbl">${s.label}</div>
+                </div>
+              `).join('')}
+            </div>
+          ` : `
+            <div class="hm-chart-empty">Sem faturamento registrado ainda</div>
+          `}
+        </div>
+      `;
     }
   } catch(e) {
     // stats falharam — remove os shimmer placeholders silenciosamente
     const grid = document.getElementById('hmStatsGrid');
     if (grid) grid.innerHTML = '';
+    const chartSec = document.getElementById('hmChartSection');
+    if (chartSec) chartSec.innerHTML = '';
   }
+}
+
+function _hmUltimos6Meses(orcs) {
+  const arr = [];
+  const agora = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    const label = d.toLocaleDateString('pt-BR', { month:'short' }).replace('.','');
+    const total = orcs.filter(o => (o.criadoEm||'').startsWith(key)).reduce((s,o) => s + (o.resultado?.total||0), 0);
+    arr.push({ label: label.charAt(0).toUpperCase()+label.slice(1), total });
+  }
+  return arr;
+}
+
+function formatBRLCompact(v) {
+  if (v >= 1000) return 'R$ ' + (v/1000).toFixed(1).replace('.',',') + 'k';
+  return formatBRL(v);
 }
 
 function goOrc(tipo) {
