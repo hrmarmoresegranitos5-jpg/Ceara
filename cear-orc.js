@@ -26,6 +26,7 @@ function _setBoxTipo(i) { orcSetBoxTipo(_ORC.boxTipos[i]); }
 function _setMola(i)    { orcSetMola(_ORC.molaOpts[i]); }
 function _togAcc(id)    { orcToggleAcc(id, false); }
 function _togAccObr(id) { orcToggleAcc(id, true); }
+function orcSetFixacaoVidro(v) { orcState.fixacaoVidro=v; renderOrc(document.getElementById('pgWrap')); }
 
 // ════════════════════════════════════════════════════════════
 // ÁREAS — agrupamento profissional dos tipos de item
@@ -35,12 +36,31 @@ var _AREA_SVG = {
   janelas: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="1"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="3.5" y1="12" x2="20.5" y2="12"/></svg>',
   box:     '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="10.5" height="17" rx="1"/><rect x="10" y="3.5" width="10.5" height="17" rx="1" opacity=".55"/></svg>',
   outros:  '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><line x1="8" y1="16.5" x2="16.5" y2="8"/></svg>',
+  vidrofixo: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3" width="17" height="17" rx="1"/><circle cx="5.5" cy="18.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.5" cy="18.5" r="1.1" fill="currentColor" stroke="none"/></svg>',
 };
+// Tipos que ainda não existem no TIPOS externo (cear-dados.js) — fallback local
+// pra breadcrumb/descrição funcionarem mesmo sem esse arquivo.
+var _ORC_TIPO_EXTRA = {
+  vidro_fixo: { label:'Vidro Fixo', icon:'🔷' },
+};
+function _tipoLabel(id) {
+  var t = (typeof TIPOS!=='undefined'?TIPOS.filter(function(x){return x.id===id;})[0]:null);
+  if (t) return t.label;
+  if (_ORC_TIPO_EXTRA[id]) return _ORC_TIPO_EXTRA[id].label;
+  return (typeof TIPO_LABEL!=='undefined' && TIPO_LABEL[id]) || id;
+}
+function _tipoIcon(id) {
+  var t = (typeof TIPOS!=='undefined'?TIPOS.filter(function(x){return x.id===id;})[0]:null);
+  if (t) return t.icon;
+  if (_ORC_TIPO_EXTRA[id]) return _ORC_TIPO_EXTRA[id].icon;
+  return '';
+}
 var AREAS = [
-  { id:'portas',  nome:'Portas',          icon:'🚪', desc:'Pivotante e de correr',              tipos:['pivotante','correr'],           cor:'rgba(212,175,55,0.14)',  borda:'rgba(212,175,55,0.3)',  fg:'#EDD060' },
-  { id:'janelas', nome:'Janelas',         icon:'🪟', desc:'Janela e basculante',                 tipos:['janela','basculante'],          cor:'rgba(80,160,220,0.14)',  borda:'rgba(80,160,220,0.32)', fg:'rgba(120,190,240,1)' },
-  { id:'box',     nome:'Box de Banheiro', icon:'🛁', desc:'Fixo, convencional, canto',           tipos:['box'],                          cor:'rgba(58,158,106,0.14)',  borda:'rgba(58,158,106,0.32)', fg:'rgba(100,200,150,1)' },
-  { id:'outros',  nome:'Outros',          icon:'✨', desc:'Espelho, guarda-corpo, vidro comum',  tipos:['espelho','guarda','comum'],     cor:'rgba(180,120,220,0.14)', borda:'rgba(180,120,220,0.32)', fg:'rgba(200,150,230,1)' },
+  { id:'portas',    nome:'Portas',          icon:'🚪', desc:'Pivotante e de correr',              tipos:['pivotante','correr'],           cor:'rgba(212,175,55,0.14)',  borda:'rgba(212,175,55,0.3)',  fg:'#EDD060' },
+  { id:'janelas',   nome:'Janelas',         icon:'🪟', desc:'Janela e basculante',                 tipos:['janela','basculante'],          cor:'rgba(80,160,220,0.14)',  borda:'rgba(80,160,220,0.32)', fg:'rgba(120,190,240,1)' },
+  { id:'box',       nome:'Box de Banheiro', icon:'🛁', desc:'Fixo, convencional, canto',           tipos:['box'],                          cor:'rgba(58,158,106,0.14)',  borda:'rgba(58,158,106,0.32)', fg:'rgba(100,200,150,1)' },
+  { id:'vidrofixo', nome:'Vidro Fixo',      icon:'🔷', desc:'Fixado com PU ou suporte',            tipos:['vidro_fixo'],                   cor:'rgba(60,190,205,0.14)',  borda:'rgba(60,190,205,0.32)', fg:'rgba(100,215,225,1)' },
+  { id:'outros',    nome:'Outros',          icon:'✨', desc:'Espelho, guarda-corpo, vidro comum',  tipos:['espelho','guarda','comum'],     cor:'rgba(180,120,220,0.14)', borda:'rgba(180,120,220,0.32)', fg:'rgba(200,150,230,1)' },
 ];
 AREAS.forEach(function(a){ a.svg = _AREA_SVG[a.id] || a.icon; });
 function _areaOfTipo(tipo) {
@@ -107,7 +127,7 @@ function _renderOrcAreaPicker(wrap) {
   // ── Atalho "Continuar" (item em andamento, ainda não adicionado à lista) ──
   var continuarBlock = '';
   if (_orcTouched && orcState.larg > 0 && orcState.alt > 0) {
-    var descCont = (TIPO_LABEL[orcState.tipo]||orcState.tipo)+' '+orcState.larg+'×'+orcState.alt+' cm';
+    var descCont = _tipoLabel(orcState.tipo)+' '+orcState.larg+'×'+orcState.alt+' cm';
     continuarBlock = '<button class="orc-continuar" onclick="orcSelecionarArea(\''+_areaOfTipo(orcState.tipo)+'\')">'
       + '<span class="orc-continuar-ic">↻</span>'
       + '<div class="orc-continuar-txt"><span class="orc-continuar-lbl">Continuar de onde parou</span>'
@@ -150,8 +170,11 @@ function renderOrc(wrap) {
   var isCorrer = s.tipo === 'correr';
   var isJanela = s.tipo === 'janela';
   var isBox    = s.tipo === 'box';
+  var isVidroFixo = s.tipo === 'vidro_fixo';
   var nFP      = isPiv ? (s.pivFolhas||1) : 1;
-  var vidrosDispo = (VIDROS_POR_TIPO[s.tipo]||[]).map(function(k){
+  var vidrosChaves = (VIDROS_POR_TIPO[s.tipo]||[]);
+  if (!vidrosChaves.length && isVidroFixo) vidrosChaves = Object.keys(CFG.vidros||{});
+  var vidrosDispo = vidrosChaves.map(function(k){
     return {key:k, nome:CFG.vidros[k].nome, preco:CFG.vidros[k].preco};
   });
 
@@ -171,6 +194,8 @@ function renderOrc(wrap) {
   // ── Breadcrumb: Área → Tipo → Medidas ──
   var areaAtual = _areaObj(orcArea);
   var tipoAtual = TIPOS.filter(function(x){return x.id===s.tipo;})[0];
+  var tipoLbl = tipoAtual ? tipoAtual.label : _tipoLabel(s.tipo);
+  var tipoIco = tipoAtual ? tipoAtual.icon : _tipoIcon(s.tipo);
   var areaCrumb = '<div class="orc-crumb-row">'
     + '<div class="orc-crumb-steps">'
     + '<button class="orc-crumb-step" onclick="orcVoltarArea()" title="Trocar área">'
@@ -179,8 +204,8 @@ function renderOrc(wrap) {
     + '</button>'
     + '<span class="orc-crumb-sep">›</span>'
     + '<span class="orc-crumb-step is-static">'
-      + '<span class="orc-crumb-ic">'+(tipoAtual?tipoAtual.icon:'')+'</span>'
-      + '<span class="orc-crumb-txt">'+(tipoAtual?tipoAtual.label:'')+'</span>'
+      + '<span class="orc-crumb-ic">'+tipoIco+'</span>'
+      + '<span class="orc-crumb-txt">'+tipoLbl+'</span>'
     + '</span>'
     + '<span class="orc-crumb-sep">›</span>'
     + '<span class="orc-crumb-step is-current">'
@@ -258,6 +283,23 @@ function renderOrc(wrap) {
       +'<div class="correr-folhas">'+jb+'</div></div>';
   }
 
+  // ── Fixação do vidro fixo (PU ou Suporte) ──
+  var vidroFixacaoBlock = '';
+  if (isVidroFixo) {
+    var fix = s.fixacaoVidro || 'pu';
+    vidroFixacaoBlock = '<div class="field" style="margin-bottom:14px"><label>Fixação</label>'
+      +'<div class="correr-folhas">'
+      +'<button class="folha-btn'+(fix==='pu'?' active':'')+'" onclick="orcSetFixacaoVidro(\'pu\')">'
+        +'<span class="folha-n" style="font-size:.85rem">PU</span>'
+        +'<span class="folha-lbl">colado</span>'
+        +'<span class="folha-desc">+ R$ 30/m²</span></button>'
+      +'<button class="folha-btn'+(fix==='suporte'?' active':'')+'" onclick="orcSetFixacaoVidro(\'suporte\')">'
+        +'<span class="folha-n" style="font-size:.85rem">Suporte</span>'
+        +'<span class="folha-lbl">canto/centro</span>'
+        +'<span class="folha-desc">R$ 20 cada</span></button>'
+      +'</div></div>';
+  }
+
   // ── Dimensões ──
   var dimBlock = '';
   if (isBox&&(s.boxTipo||'conv')==='canto') {
@@ -274,6 +316,13 @@ function renderOrc(wrap) {
   }
   var fixoField=(isPiv&&s.temFixo)?'<div class="field"><label>Larg. fixo (cm)</label><input id="orcFixoLarg" type="number" inputmode="numeric" value="'+(s.fixoLarg||40)+'" oninput="orcUpdate()"></div>':'';
   var bandField=(isPiv&&s.temBandeirola)?'<div class="field"><label>Alt. bandeirola (cm)</label><input id="orcBandH" type="number" inputmode="numeric" value="'+(s.bandH||40)+'" oninput="orcUpdate()"></div>':'';
+  var suporteQtyField = '';
+  if (isVidroFixo && (s.fixacaoVidro||'pu')==='suporte') {
+    suporteQtyField = '<div class="campo-row">'
+      +'<div class="field"><label>Suportes de canto</label><input id="orcSupCanto" type="number" min="0" inputmode="numeric" value="'+(s.qtdSuporteCanto||0)+'" oninput="orcUpdate()"></div>'
+      +'<div class="field"><label>Suportes de centro</label><input id="orcSupCentro" type="number" min="0" inputmode="numeric" value="'+(s.qtdSuporteCentro||0)+'" oninput="orcUpdate()"></div>'
+      +'</div>';
+  }
 
   // ── Kit pivotante + mola ──
   var kitBlock = '';
@@ -372,8 +421,8 @@ function renderOrc(wrap) {
     + editBanner
     + tipoBlock
     + '<svg id="orcCAD" class="orc-cad" viewBox="0 0 320 200"></svg>'
-    + boxBlock + pivConfig + folhasBlock + janelaBlock
-    + dimBlock + fixoField + bandField
+    + boxBlock + pivConfig + folhasBlock + janelaBlock + vidroFixacaoBlock
+    + dimBlock + fixoField + bandField + suporteQtyField
     + kitBlock + kitCorBlock
     + '<div class="field"><label>Tipo de vidro</label><select id="orcVidro" onchange="orcUpdate()">'+vidroOpts+'</select></div>'
     + accsBlock
@@ -433,7 +482,7 @@ function orcAdicionarItem() {
   var res = orcState.resultado;
   if (!res || !res.total) { alert('Configure o item antes de adicionar.'); return; }
 
-  var desc = (TIPO_LABEL[orcState.tipo]||orcState.tipo)+' '+orcState.larg+'×'+orcState.alt+' cm';
+  var desc = _tipoLabel(orcState.tipo)+' '+orcState.larg+'×'+orcState.alt+' cm';
   if ((orcState.qty||1) > 1) desc = orcState.qty+'× '+desc;
   var snap = JSON.parse(JSON.stringify(orcState));
 
@@ -473,6 +522,9 @@ function orcAdicionarItem() {
   orcState.largB           = 0;
   orcState.fixoLarg        = 40;
   orcState.bandH           = 40;
+  orcState.fixacaoVidro    = 'pu';
+  orcState.qtdSuporteCanto = 0;
+  orcState.qtdSuporteCentro= 0;
   orcState.cliente         = cliente;
   orcState.fone            = fone;
 
@@ -515,10 +567,39 @@ function orcLimparItens() {
   renderOrc(document.getElementById('pgWrap'));
 }
 
+// ── Cálculo próprio do "Vidro Fixo" (PU ou Suporte) ────────────
+// Feito local porque o cálculo geral (calcularOrcamento) ainda não
+// conhece esse tipo — está em outro arquivo que ainda não recebi.
+// Não aplica desconto à vista/parcelamento aqui (não sei essa regra
+// pra esse tipo); total = totalAvista até me passarem essa info.
+function _calcVidroFixo(s) {
+  var larg = parseFloat(s.larg)||0, alt = parseFloat(s.alt)||0;
+  if (larg < 20 || alt < 20) return {erro:'Dimensões mínimas: 20×20 cm'};
+  var area = (larg/100)*(alt/100);
+  var vidro = (CFG.vidros && CFG.vidros[s.vidroKey]) || {nome:'Vidro', preco:0};
+  var custoVidro = area * vidro.preco;
+  var linhas = [{nome:vidro.nome+' ('+area.toFixed(2)+' m²)', valor:custoVidro}];
+  var extra = 0;
+  if ((s.fixacaoVidro||'pu') === 'suporte') {
+    var qtdC = parseInt(s.qtdSuporteCanto)||0;
+    var qtdM = parseInt(s.qtdSuporteCentro)||0;
+    var qtdTotal = qtdC+qtdM;
+    extra = qtdTotal*20;
+    linhas.push({nome:'Suportes ('+qtdC+' canto + '+qtdM+' centro)', valor:extra});
+  } else {
+    extra = area*30;
+    linhas.push({nome:'PU (fixação)', valor:extra});
+  }
+  var km = parseFloat(s.km)||0;
+  if (km<=0) linhas.push({nome:'Frete (0 km)', valor:0});
+  var total = custoVidro+extra;
+  return {total:total, totalAvista:total, linhas:linhas};
+}
+
 // ── Cálculo e resultado ───────────────────────────────────────
 function orcCalcAndRender() {
   var s=orcState;
-  var res=calcularOrcamento({
+  var res = (s.tipo==='vidro_fixo') ? _calcVidroFixo(s) : calcularOrcamento({
     tipo:s.tipo, larg:s.larg, alt:s.alt, vidro:s.vidroKey, accs:s.accs||{}, km:s.km,
     folhasCorrer:s.folhasCorrer||2, pivFolhas:s.pivFolhas||1, kitPivotante:s.kitPivotante||'comum',
     temFixo:!!s.temFixo, fixoLarg:s.fixoLarg||40, temBandeirola:!!s.temBandeirola, bandH:s.bandH||40,
@@ -574,6 +655,10 @@ function orcUpdate() {
   if (s.temFixo)       s.fixoLarg=parseFloat(document.getElementById('orcFixoLarg')?.value)||40;
   if (s.temBandeirola) s.bandH   =parseFloat(document.getElementById('orcBandH')?.value)||40;
   if (s.tipo==='box'&&s.boxTipo==='canto') s.largB=parseFloat(document.getElementById('orcLargB')?.value)||80;
+  if (s.tipo==='vidro_fixo'&&(s.fixacaoVidro||'pu')==='suporte') {
+    s.qtdSuporteCanto  = parseInt(document.getElementById('orcSupCanto')?.value)||0;
+    s.qtdSuporteCentro = parseInt(document.getElementById('orcSupCentro')?.value)||0;
+  }
   _orcRefreshCAD();
   orcCalcAndRender();
 }
@@ -599,7 +684,9 @@ function _getVisAcc() {
 
 function _orcRefreshCAD() {
   var s=orcState, el=document.getElementById('orcCAD'); if(!el) return;
-  renderCAD(el,{tipo:s.tipo,larg:s.larg,alt:s.alt,folhas:s.folhasCorrer,pivFolhas:s.pivFolhas||1,kitPivotante:s.kitPivotante||'comum',temFixo:s.temFixo,fixoLarg:s.fixoLarg||40,temBandeirola:s.temBandeirola,bandH:s.bandH||40,temMola:s.molaQtd>0,accs:s.accs||{},janelaFolhas:s.janelaFolhas||2});
+  try {
+    renderCAD(el,{tipo:s.tipo,larg:s.larg,alt:s.alt,folhas:s.folhasCorrer,pivFolhas:s.pivFolhas||1,kitPivotante:s.kitPivotante||'comum',temFixo:s.temFixo,fixoLarg:s.fixoLarg||40,temBandeirola:s.temBandeirola,bandH:s.bandH||40,temMola:s.molaQtd>0,accs:s.accs||{},janelaFolhas:s.janelaFolhas||2});
+  } catch(e) { /* tipo novo (vidro_fixo) pode não ser reconhecido ainda pelo desenho técnico externo */ }
 }
 
 function _renderMiniCADs() {
@@ -624,6 +711,7 @@ function orcTrocaTipo(tipo) {
   orcState.pivFolhas=1; orcState.molaQtd=0; orcState.temMola=false; orcState.janelaFolhas=2;
   orcState.puxadoresQtd=1; orcState.kitPivotante='comum'; orcState.kitCor='branco';
   orcState.boxTipo='conv'; orcState.qty=1; orcState.cliente=c; orcState.fone=f;
+  orcState.fixacaoVidro='pu'; orcState.qtdSuporteCanto=0; orcState.qtdSuporteCentro=0;
   if(tipo==='correr') orcState.folhasCorrer=2;
   renderOrc(document.getElementById('pgWrap'));
 }
