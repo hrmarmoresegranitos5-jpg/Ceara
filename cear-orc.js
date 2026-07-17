@@ -567,45 +567,17 @@ function orcLimparItens() {
   renderOrc(document.getElementById('pgWrap'));
 }
 
-// ── Cálculo próprio do "Vidro Fixo" (PU ou Suporte) ────────────
-// Feito local porque o cálculo geral (calcularOrcamento) ainda não
-// conhece esse tipo — está em outro arquivo que ainda não recebi.
-// Não aplica desconto à vista/parcelamento aqui (não sei essa regra
-// pra esse tipo); total = totalAvista até me passarem essa info.
-function _calcVidroFixo(s) {
-  var larg = parseFloat(s.larg)||0, alt = parseFloat(s.alt)||0;
-  if (larg < 20 || alt < 20) return {erro:'Dimensões mínimas: 20×20 cm'};
-  var area = (larg/100)*(alt/100);
-  var vidro = (CFG.vidros && CFG.vidros[s.vidroKey]) || {nome:'Vidro', preco:0};
-  var custoVidro = area * vidro.preco;
-  var linhas = [{nome:vidro.nome+' ('+area.toFixed(2)+' m²)', valor:custoVidro}];
-  var extra = 0;
-  if ((s.fixacaoVidro||'pu') === 'suporte') {
-    var qtdC = parseInt(s.qtdSuporteCanto)||0;
-    var qtdM = parseInt(s.qtdSuporteCentro)||0;
-    var qtdTotal = qtdC+qtdM;
-    extra = qtdTotal*20;
-    linhas.push({nome:'Suportes ('+qtdC+' canto + '+qtdM+' centro)', valor:extra});
-  } else {
-    extra = area*30;
-    linhas.push({nome:'PU (fixação)', valor:extra});
-  }
-  var km = parseFloat(s.km)||0;
-  if (km<=0) linhas.push({nome:'Frete (0 km)', valor:0});
-  var total = custoVidro+extra;
-  return {total:total, totalAvista:total*0.9, linhas:linhas};
-}
-
 // ── Cálculo e resultado ───────────────────────────────────────
 function orcCalcAndRender() {
   var s=orcState;
-  var res = (s.tipo==='vidro_fixo') ? _calcVidroFixo(s) : calcularOrcamento({
+  var res = calcularOrcamento({
     tipo:s.tipo, larg:s.larg, alt:s.alt, vidro:s.vidroKey, accs:s.accs||{}, km:s.km,
     folhasCorrer:s.folhasCorrer||2, pivFolhas:s.pivFolhas||1, kitPivotante:s.kitPivotante||'comum',
     temFixo:!!s.temFixo, fixoLarg:s.fixoLarg||40, temBandeirola:!!s.temBandeirola, bandH:s.bandH||40,
     temMola:s.molaQtd>0, puxadoresQtd:s.puxadoresQtd||1, janelaFolhas:s.janelaFolhas||2,
     kitCor:s.kitCor||'branco', molaQtd:s.molaQtd||0, boxTipo:s.boxTipo||'conv',
     largB:s.largB||80, puxadoresCorrerQtd:s.puxadoresCorrerQtd||1,
+    fixacaoVidro:s.fixacaoVidro||'pu', qtdSuporteCanto:s.qtdSuporteCanto||0, qtdSuporteCentro:s.qtdSuporteCentro||0,
   });
   orcState.resultado=res;
   var rb=document.getElementById('orcResultBox'), ra=document.getElementById('orcAcoes');

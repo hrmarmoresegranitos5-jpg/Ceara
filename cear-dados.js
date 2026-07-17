@@ -35,6 +35,8 @@ const COMERCIAL_DEF = {
   mola_hidraulica:     500,
   cantoneira_por_m:     10,
   pu_por_m:             70,
+  pu_vidro_fixo_m2:     30,  // R$/m² de PU pro Vidro Fixo (colado)
+  suporte_vidro_fixo:   20,  // R$ por suporte (canto ou centro, mesmo preço)
   // Kit engenharia (janelas, correr, box)
   kit_eng_branco:      120,  // R$/m² — alumínios + trilhos + perfis
   kit_eng_preto:       130,  // R$/m² — kit preto
@@ -146,6 +148,7 @@ const ACESSORIOS_CONFIG = {
                { id:'colado',   nome:'Fixação Colada',       preco:0,   obrig:false }],
   comum:      [{ id:'recorte',  nome:'Recorte (+R$10/m²)',   preco:null, obrig:false }],
   guarda:     [],
+  vidro_fixo: [],
 };
 
 const VIDROS_POR_TIPO = {
@@ -157,6 +160,7 @@ const VIDROS_POR_TIPO = {
   basculante: ['com_4','com_6','temp_trans'],
   guarda:     ['temp_trans','temp_fume','temp_serig'],
   comum:      ['com_4','com_6','com_fume3','com_fume4','esp_3','esp_4'],
+  vidro_fixo: ['temp_trans','temp_fume','temp_serig','temp_jat','com_4','com_6'],
 };
 
 const DEFAULTS = {
@@ -168,6 +172,7 @@ const DEFAULTS = {
   basculante: { larg:60,  alt:40  },
   guarda:     { larg:120, alt:110 },
   comum:      { larg:60,  alt:60  },
+  vidro_fixo: { larg:80,  alt:120 },
 };
 
 const TIPOS = [
@@ -179,10 +184,11 @@ const TIPOS = [
   { id:'basculante', label:'Basculante',      icon:'⬆️' },
   { id:'guarda',     label:'Guarda Corpo',    icon:'🏗️' },
   { id:'comum',      label:'Vidro Comum',     icon:'🔷' },
+  { id:'vidro_fixo', label:'Vidro Fixo',      icon:'🔷' },
 ];
 
-const TIPO_LABEL = { pivotante:'Porta Pivotante',correr:'Porta de Correr',janela:'Janela',box:'Box de Banheiro',espelho:'Espelho',guarda:'Guarda Corpo',basculante:'Basculante',comum:'Vidro Comum' };
-const TIPO_ICON  = { pivotante:'🚪',correr:'🔲',janela:'🪟',box:'🛁',espelho:'🪞',guarda:'🏗️',basculante:'⬆️',comum:'🔷' };
+const TIPO_LABEL = { pivotante:'Porta Pivotante',correr:'Porta de Correr',janela:'Janela',box:'Box de Banheiro',espelho:'Espelho',guarda:'Guarda Corpo',basculante:'Basculante',comum:'Vidro Comum',vidro_fixo:'Vidro Fixo' };
+const TIPO_ICON  = { pivotante:'🚪',correr:'🔲',janela:'🪟',box:'🛁',espelho:'🪞',guarda:'🏗️',basculante:'⬆️',comum:'🔷',vidro_fixo:'🔷' };
 
 // ── Estado do orçamento ───────────────────────────────────────
 let orcState = {

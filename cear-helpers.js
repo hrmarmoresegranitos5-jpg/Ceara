@@ -6,7 +6,7 @@ function formatBRL(v) {
   return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits:2 });
 }
 
-function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, pivFolhas, kitPivotante, temFixo, fixoLarg, temBandeirola, bandH, temMola, puxadoresQtd, janelaFolhas, kitCor, molaQtd, boxTipo, largB, puxadoresCorrerQtd }) {
+function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, pivFolhas, kitPivotante, temFixo, fixoLarg, temBandeirola, bandH, temMola, puxadoresQtd, janelaFolhas, kitCor, molaQtd, boxTipo, largB, puxadoresCorrerQtd, fixacaoVidro, qtdSuporteCanto, qtdSuporteCentro }) {
   if (!larg || !alt || isNaN(larg) || isNaN(alt)) return null;
 
   // ── Dimensões mínimas por tipo ───────────────────────────────
@@ -19,6 +19,7 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
     basculante: { larg:30, alt:20,  msg:'Basculante: mín. 30×20cm' },
     guarda:     { larg:60, alt:60,  msg:'Guarda corpo: mín. 60×60cm' },
     comum:      { larg:10, alt:10,  msg:'Vidro: mín. 10×10cm' },
+    vidro_fixo: { larg:20, alt:20,  msg:'Vidro fixo: mín. 20×20cm' },
   };
   const min = MINS[tipo];
   if (min && (larg < min.larg || alt < min.alt)) {
@@ -167,6 +168,22 @@ function calcularOrcamento({ tipo, larg, alt, vidro, accs, km, folhasCorrer, piv
       const valPUB = perBand * (CFG.comercial.pu_por_m || 70);
       linhas.push({ nome:'PU bandeirola (' + perBand.toFixed(1) + 'm)', valor:valPUB });
       total += valPUB;
+    }
+  }
+
+  // Vidro Fixo — PU (colado) ou Suportes (canto/centro)
+  if (tipo === 'vidro_fixo') {
+    if ((fixacaoVidro||'pu') === 'suporte') {
+      const qtdC = Number(qtdSuporteCanto)||0;
+      const qtdM = Number(qtdSuporteCentro)||0;
+      const qtdTotal = qtdC+qtdM;
+      const valSup = qtdTotal * (CFG.comercial.suporte_vidro_fixo || 20);
+      linhas.push({ nome:'Suportes (' + qtdC + ' canto + ' + qtdM + ' centro)', valor: valSup });
+      total += valSup;
+    } else {
+      const valPUVF = area * (CFG.comercial.pu_vidro_fixo_m2 || 30);
+      linhas.push({ nome:'PU (fixação)', valor: valPUVF });
+      total += valPUVF;
     }
   }
   // Mola hidráulica — molaQtd: 0, 1 ou 2
@@ -348,6 +365,7 @@ function corTipo(tipo) {
 const NAV_ITEMS = [
   { id:'home',       label:'Início',    icon:'🏠', cta:false },
   { id:'orc',        label:'Orçamento', icon:'🧮', cta:true  },
+  { id:'agenda',     label:'Agenda',    icon:'📅', cta:false },
   { id:'financeiro', label:'Preços',    icon:'💎', cta:false },
   { id:'historico',  label:'Histórico', icon:'📂', cta:false },
   { id:'clientes',   label:'Clientes',  icon:'👥', cta:false },
@@ -385,6 +403,7 @@ function renderPage() {
   switch(paginaAtiva) {
     case 'home':       renderHome(wrap); break;
     case 'orc':        renderOrc(wrap); break;
+    case 'agenda':     renderAgenda(wrap); break;
     case 'financeiro': renderFinanceiro(wrap); break;
     case 'historico':  renderHistorico(wrap); break;
     case 'clientes':   renderClientes(wrap); break;
