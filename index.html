@@ -31,11 +31,12 @@ body { font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'SF Pro Display
   --bg:    #0E0E1A; --bg2: #131320; --s1: #16162A; --s2: #1A1A2E; --s3: #1E1E34; --s4: #22223A;
   --gold:  #C9A84C; --gold2: #EDD060; --gold3: rgba(212,175,55,0.12); --gold4: rgba(212,175,55,0.06);
   --grn:   #3A9E6A; --grn2: rgba(58,158,106,0.12);
-  --tx:    #EDEAE0; --t2: #B8B4A8; --t3: #7A7880; --t4: #4E4C58;
+  --tx:    #EDEAE0; --t1: #EDEAE0; --t2: #B8B4A8; --t3: #7A7880; --t4: #4E4C58;
   --red:   #E05555; --red2: rgba(224,85,85,0.12);
   --shadow-sm: 0 2px 8px rgba(0,0,0,0.4); --shadow-md: 0 4px 20px rgba(0,0,0,0.55); --shadow-lg: 0 8px 40px rgba(0,0,0,0.7);
   --border: 1px solid rgba(255,255,255,0.06); --border-g: 1px solid rgba(212,175,55,0.2);
   --r-sm: 8px; --r-md: 14px; --r-lg: 20px; --r-xl: 26px;
+  --gold1: #EDD060; --brd: rgba(255,255,255,0.08); --card: #1E1E34;
 }
 
 /* ── Keyframes ── */
@@ -1108,6 +1109,95 @@ input[type=date] { color-scheme:dark; }
 .orc-item-preco { font-size:.9rem; font-weight:700; color:var(--gold); white-space:nowrap; }
 .orc-item-del { background:none; border:1px solid rgba(255,60,60,.4); color:rgba(255,100,100,.8); border-radius:6px; width:26px; height:26px; font-size:.75rem; cursor:pointer; flex-shrink:0; }
 .orc-itens-total { display:flex; justify-content:space-between; padding-top:10px; font-weight:800; font-size:1rem; color:var(--t1); }
+
+/* ── Home: busca global ── */
+.hm-busca-global {
+  display:flex;align-items:center;gap:8px;
+  background:var(--s2);border:var(--border);border-radius:var(--r-md);
+  padding:12px 14px;
+}
+.hm-busca-item {
+  display:flex;align-items:center;gap:10px;
+  background:var(--s2);border:var(--border);border-radius:var(--r-sm);
+  padding:10px 12px;margin-bottom:6px;cursor:pointer;
+  transition:transform 120ms ease;
+}
+.hm-busca-item:active { transform:scale(.97); }
+
+/* ── Home: stats ── */
+.hm-stats-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
+.hm-stat-card {
+  background:var(--s2);border:var(--border);border-radius:var(--r-md);
+  padding:12px 10px;text-align:center;cursor:pointer;
+  transition:transform 120ms ease;
+}
+.hm-stat-card:active { transform:scale(.95); }
+.hm-stat-card.hm-stat-warn { border-color:rgba(220,100,40,.3); }
+.hm-stat-val { font-size:1rem;font-weight:800;color:var(--gold1);white-space:nowrap; }
+.hm-stat-lbl { font-size:.62rem;color:var(--t3);margin-top:4px; }
+.hm-stat-loading { position:relative;min-height:56px;overflow:hidden; }
+.hm-stat-shimmer {
+  position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.06) 50%,transparent 100%);
+  animation:shimmer 1.5s infinite;
+}
+
+/* ── Home: último orçamento ── */
+.hm-ultimo-card {
+  background:var(--s2);border:var(--border);border-radius:var(--r-md);
+  padding:12px 14px;cursor:pointer;transition:transform 120ms ease;
+}
+.hm-ultimo-card:active { transform:scale(.97); }
+
+/* ── Orçamento: cabeçalho cliente / banner de edição ── */
+.orc-cliente-header { margin-bottom:14px; }
+.orc-edit-banner {
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--gold4);border:var(--border-g);border-radius:var(--r-sm);
+  padding:8px 12px;font-size:.75rem;color:var(--gold1);font-weight:600;margin-bottom:14px;
+}
+.orc-edit-cancel {
+  background:none;border:1px solid var(--gold);color:var(--gold1);
+  border-radius:6px;padding:3px 10px;font-size:.68rem;font-weight:700;cursor:pointer;
+}
+
+/* ── Orçamento: lista de itens (estrutura nova) ── */
+.orc-itens-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:.75rem;font-weight:700;color:var(--t2); }
+.orc-limpar-btn { background:none;border:none;color:var(--red);font-size:.68rem;font-weight:600;cursor:pointer; }
+.orc-item-info { flex:1;display:flex;flex-direction:column;gap:2px;min-width:0; }
+.orc-item-nome { font-size:.82rem;color:var(--t1); }
+.orc-item-val { font-size:.78rem;font-weight:700;color:var(--gold); }
+.orc-item-btns { display:flex;gap:6px;flex-shrink:0; }
+.orc-item-edit { background:none;border:1px solid rgba(255,255,255,.12);color:var(--t2);border-radius:6px;width:26px;height:26px;font-size:.72rem;cursor:pointer; }
+.orc-item-row.editing { background:var(--gold4);border-radius:8px;margin:0 -8px;padding:8px; }
+
+/* ── Orçamento: erro de dimensão ── */
+.orc-erro-dim {
+  background:var(--red2);border:1px solid rgba(224,85,85,.3);color:var(--red);
+  border-radius:var(--r-sm);padding:8px 12px;font-size:.72rem;font-weight:600;margin-top:8px;
+}
+
+/* ── Histórico: badges e chips de status ── */
+.hist-badge-status { font-size:.58rem;padding:1px 5px;border-radius:10px;font-weight:700; }
+.hist-badge-aprovado  { background:var(--grn2);color:var(--grn);border:1px solid rgba(58,158,106,.3); }
+.hist-badge-executado { background:rgba(80,160,220,.15);color:rgba(80,160,220,1);border:1px solid rgba(80,160,220,.3); }
+.hist-badge-cancelado { background:var(--red2);color:var(--red);border:1px solid rgba(224,85,85,.3); }
+.hist-status-row { display:flex;flex-wrap:wrap;gap:6px;padding:10px 0;border-top:1px solid rgba(255,255,255,.04); }
+.hist-status-chip {
+  display:flex;align-items:center;gap:4px;padding:6px 10px;border-radius:20px;
+  border:1px solid rgba(255,255,255,.1);background:none;color:var(--t3);
+  font-size:.66rem;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;
+  transition:transform 120ms ease;
+}
+.hist-status-chip:active { transform:scale(.94); }
+.hist-status-chip.hist-status-on { font-weight:800; }
+
+/* ── Clientes: avatar ── */
+.cli-avatar {
+  width:40px;height:40px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;font-weight:700;color:#0E0E1A;
+}
 
 </style>
 </head>
