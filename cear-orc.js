@@ -27,6 +27,52 @@ function _setMola(i)    { orcSetMola(_ORC.molaOpts[i]); }
 function _togAcc(id)    { orcToggleAcc(id, false); }
 function _togAccObr(id) { orcToggleAcc(id, true); }
 
+// ════════════════════════════════════════════════════════════
+// ÁREAS — agrupamento profissional dos tipos de item
+// ════════════════════════════════════════════════════════════
+var AREAS = [
+  { id:'portas',  nome:'Portas',          icon:'🚪', desc:'Pivotante e de correr',              tipos:['pivotante','correr'] },
+  { id:'janelas', nome:'Janelas',         icon:'🪟', desc:'Janela e basculante',                 tipos:['janela','basculante'] },
+  { id:'box',     nome:'Box de Banheiro', icon:'🛁', desc:'Fixo, convencional, canto',           tipos:['box'] },
+  { id:'outros',  nome:'Outros',          icon:'✨', desc:'Espelho, guarda-corpo, vidro comum',  tipos:['espelho','guarda','comum'] },
+];
+function _areaOfTipo(tipo) {
+  for (var i=0;i<AREAS.length;i++) if (AREAS[i].tipos.indexOf(tipo)>=0) return AREAS[i].id;
+  return AREAS[0].id;
+}
+function _areaObj(id) {
+  for (var i=0;i<AREAS.length;i++) if (AREAS[i].id===id) return AREAS[i];
+  return null;
+}
+var orcArea = null; // null = mostra a tela de escolha de área
+function orcSelecionarArea(id) {
+  orcArea = id;
+  var area = _areaObj(id);
+  if (area && area.tipos.indexOf(orcState.tipo)===-1) orcTrocaTipo(area.tipos[0]);
+  else renderOrc(document.getElementById('pgWrap'));
+}
+function orcVoltarArea() {
+  orcArea = null;
+  renderOrc(document.getElementById('pgWrap'));
+}
+function _renderOrcAreaPicker(wrap) {
+  var cards = '';
+  AREAS.forEach(function(a){
+    cards += '<button class="orc-area-card" onclick="orcSelecionarArea(\''+a.id+'\')">'
+      + '<span class="orc-area-ic">'+a.icon+'</span>'
+      + '<div class="orc-area-txt"><span class="orc-area-nm">'+a.nome+'</span>'
+      + '<span class="orc-area-desc">'+a.desc+'</span></div>'
+      + '<span class="orc-area-arr">›</span>'
+      + '</button>';
+  });
+  wrap.innerHTML = '<div id="pgOrcamento">'
+    + '<div class="orc-area-ttl">O que você vai orçar?</div>'
+    + '<div class="orc-area-sub">Escolha a área para começar</div>'
+    + '<div class="orc-area-grid">'+cards+'</div>'
+    + '<div style="height:24px"></div>'
+    + '</div>';
+}
+
 var PIV_CONFIGS = {
   '1s':{folhas:1,fixo:false,band:false},'1sf':{folhas:1,fixo:true,band:false},
   '1sb':{folhas:1,fixo:false,band:true},'1sfb':{folhas:1,fixo:true,band:true},
@@ -42,6 +88,8 @@ var orcEditIdx = -1;   // -1 = novo item; >=0 = editando item[idx]
 function renderOrc(wrap) {
   if (!wrap) return;
   var s = orcState;
+  if (orcEditIdx >= 0) orcArea = _areaOfTipo(s.tipo);
+  if (!orcArea) { _renderOrcAreaPicker(wrap); return; }
   var isPiv    = s.tipo === 'pivotante';
   var isCorrer = s.tipo === 'correr';
   var isJanela = s.tipo === 'janela';
@@ -64,13 +112,26 @@ function renderOrc(wrap) {
       +' <button class="orc-edit-cancel" onclick="orcCancelarEdicao()">Cancelar</button></div>';
   }
 
-  // ── Seletor tipo ──
-  var tipoBlock = '<div class="orc-tipos">';
-  TIPOS.forEach(function(t){
-    tipoBlock += '<button class="orc-tipo-btn'+(s.tipo===t.id?' active':'')+'" onclick="orcTrocaTipo(\''+t.id+'\')">'
-      +'<span class="orc-tipo-ic">'+t.icon+'</span><span class="orc-tipo-lbl">'+t.label+'</span></button>';
-  });
-  tipoBlock += '</div>';
+  // ── Breadcrumb da área ──
+  var areaAtual = _areaObj(orcArea);
+  var areaCrumb = '<button class="orc-area-crumb" onclick="orcVoltarArea()">'
+    + '<span class="orc-area-crumb-ic">'+(areaAtual?areaAtual.icon:'')+'</span>'
+    + '<span class="orc-area-crumb-lbl">'+(areaAtual?areaAtual.nome:'')+'</span>'
+    + '<span class="orc-area-crumb-arr">↺ trocar área</span>'
+    + '</button>';
+
+  // ── Seletor tipo (somente os tipos da área atual) ──
+  var tipoBlock = '';
+  if (areaAtual && areaAtual.tipos.length > 1) {
+    tipoBlock = '<div class="orc-tipos">';
+    areaAtual.tipos.forEach(function(tid){
+      var t = TIPOS.filter(function(x){return x.id===tid;})[0];
+      if (!t) return;
+      tipoBlock += '<button class="orc-tipo-btn'+(s.tipo===t.id?' active':'')+'" onclick="orcTrocaTipo(\''+t.id+'\')">'
+        +'<span class="orc-tipo-ic">'+t.icon+'</span><span class="orc-tipo-lbl">'+t.label+'</span></button>';
+    });
+    tipoBlock += '</div>';
+  }
 
   // ── Box tipo ──
   var boxBlock = '';
@@ -234,6 +295,7 @@ function renderOrc(wrap) {
 
   // ── Montar ──
   wrap.innerHTML = '<div id="pgOrcamento">'
+    + areaCrumb
     + clienteBlock
     + editBanner
     + tipoBlock
