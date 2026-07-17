@@ -723,7 +723,7 @@ function orcSetPuxQtd(n)       { orcState.puxadoresQtd=n; renderOrc(document.get
 function orcSetPuxCorrer(n)    { orcState.puxadoresCorrerQtd=n; renderOrc(document.getElementById('pgWrap')); }
 function orcSetMola(n)         { orcState.molaQtd=n; orcState.temMola=n>0; renderOrc(document.getElementById('pgWrap')); }
 function orcToggleMola()       { var n=orcState.molaQtd>0?0:1; orcState.molaQtd=n; orcState.temMola=n>0; renderOrc(document.getElementById('pgWrap')); }
-function orcSetBoxTipo(i)      { orcState.boxTipo=_ORC.boxTipos[i]; renderOrc(document.getElementById('pgWrap')); }
+function orcSetBoxTipo(id)      { orcState.boxTipo=id; renderOrc(document.getElementById('pgWrap')); }
 function orcToggleAcc(id,obrig){ if(obrig) return; orcState.accs[id]=!(orcState.accs[id]||false); renderOrc(document.getElementById('pgWrap')); }
 
 // ── Salvar / enviar ───────────────────────────────────────────
