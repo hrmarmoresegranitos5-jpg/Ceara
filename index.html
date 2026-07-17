@@ -286,6 +286,36 @@ body { font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'SF Pro Display
 /* ── Fields ── */
 .divider { height:1px;background:rgba(255,255,255,.05);margin:12px 0; }
 .field { margin-bottom:16px; }
+
+/* ── Orçamento: aumento geral de fonte e área de toque (só nesta tela) ── */
+#pgOrcamento .field label { font-size:.95rem;margin-bottom:9px; }
+#pgOrcamento input[type=text],#pgOrcamento input[type=number],#pgOrcamento input[type=tel],#pgOrcamento select {
+  font-size:1.08rem;padding:17px 18px;
+}
+#pgOrcamento .piv-config-ttl { font-size:.92rem;margin:16px 0 12px; }
+#pgOrcamento .piv-configs { gap:11px; }
+#pgOrcamento .piv-cfg-btn { padding:18px 10px;gap:8px; }
+#pgOrcamento .piv-cfg-lbl { font-size:.88rem;line-height:1.3; }
+#pgOrcamento .folha-btn { padding:16px 10px; }
+#pgOrcamento .folha-n { font-size:.9rem !important; }
+#pgOrcamento .folha-desc { font-size:.8rem; }
+#pgOrcamento .kit-btn { padding:18px 10px 15px;gap:7px; }
+#pgOrcamento .kit-nm { font-size:1.05rem; }
+#pgOrcamento .kit-sub { font-size:.95rem; }
+#pgOrcamento .kit-desc { font-size:.82rem; }
+#pgOrcamento .mola-toggle { padding:19px 18px;gap:16px; }
+#pgOrcamento .mola-ic { font-size:1.9rem; }
+#pgOrcamento .mola-nm { font-size:1.05rem; }
+#pgOrcamento .mola-sub { font-size:.86rem;margin-top:4px; }
+#pgOrcamento .orc-acc-btn { font-size:.95rem;padding:13px 18px;gap:8px; }
+#pgOrcamento .orc-tipo-btn { padding:16px 20px;gap:8px; }
+#pgOrcamento .orc-tipo-ic { font-size:2rem; }
+#pgOrcamento .orc-tipo-lbl { font-size:.86rem; }
+#pgOrcamento .orc-total { font-size:2.3rem; }
+#pgOrcamento .orc-avista { font-size:.95rem; }
+#pgOrcamento .orc-linha { font-size:.95rem;padding:9px 0; }
+#pgOrcamento .btn { font-size:.95rem;padding:16px 18px; }
+#pgOrcamento .campo-row .field label { font-size:.95rem; }
 .field label { display:block;font-size:.85rem;font-weight:600;color:var(--t3);margin-bottom:7px;letter-spacing:.02em; }
 input[type=text],input[type=number],input[type=email],input[type=tel],input[type=date],select,textarea {
   width:100%;background:var(--s3);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r-sm);padding:15px 16px;font-family:'Outfit',sans-serif;font-size:1rem;color:var(--tx);outline:none;appearance:none;-webkit-appearance:none;transition:border-color 150ms ease,box-shadow 150ms ease;
@@ -1160,11 +1190,18 @@ button.orc-crumb-step:active { transform:scale(.96); }
   flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;
   padding:14px 8px 12px;
   background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.09);
-  border-radius:12px;cursor:pointer;transition:all .15s;font-family:inherit;
+  border-radius:12px;cursor:pointer;transition:transform 130ms cubic-bezier(.34,1.56,.64,1),background .15s ease,border-color .15s ease;
+  font-family:inherit;outline:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  animation:springIn 320ms cubic-bezier(.34,1.56,.64,1) both;
 }
+.kit-opts .kit-btn:nth-child(1) { animation-delay:0ms; }
+.kit-opts .kit-btn:nth-child(2) { animation-delay:55ms; }
+.kit-opts .kit-btn:nth-child(3) { animation-delay:110ms; }
+.kit-btn:active { transform:scale(.94); }
 .kit-btn.active {
-  background:rgba(255,200,80,.1);border-color:rgba(255,200,80,.4);
+  background:rgba(255,200,80,.1);border-color:rgba(255,200,80,.4);transform:scale(1.02);
 }
+.kit-btn.active:active { transform:scale(.97); }
 .kit-nm {
   font-size:.92rem;font-weight:700;color:var(--tx,#f0f0f0);
 }
@@ -1194,11 +1231,15 @@ button.orc-crumb-step:active { transform:scale(.96); }
   padding: 16px 16px; background: rgba(255,255,255,.05);
   border: 1.5px solid rgba(255,255,255,.1); border-radius: 13px;
   cursor: pointer; font-family: inherit; text-align: left;
-  transition: all .15s;
+  transition: transform 130ms cubic-bezier(.34,1.56,.64,1),background .15s ease,border-color .15s ease;
+  outline:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  animation:springIn 320ms cubic-bezier(.34,1.56,.64,1) both;
 }
+.mola-toggle:active { transform:scale(.97); }
 .mola-toggle.active {
   background: rgba(201,168,76,.1); border-color: rgba(201,168,76,.45);
 }
+.mola-toggle.active:active { transform:scale(.98); }
 .mola-ic { font-size: 1.6rem; flex-shrink: 0; }
 .mola-info { flex: 1; }
 .mola-nm { display: block; font-size: .95rem; font-weight: 700; color: var(--tx,#f0f0f0); }
@@ -1217,11 +1258,18 @@ button.orc-crumb-step:active { transform:scale(.96); }
   flex: 1; padding: 10px 8px; font-size: .84rem; font-weight: 600;
   background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.1);
   border-radius: 9px; color: var(--t3,#aaa); cursor: pointer; font-family: inherit;
-  transition: all .15s;
+  transition: transform 130ms cubic-bezier(.34,1.56,.64,1),background .15s ease,border-color .15s ease,color .15s ease;
+  outline:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  animation:springIn 320ms cubic-bezier(.34,1.56,.64,1) both;
 }
+.pux-qty-row .pux-qty-btn:nth-child(2) { animation-delay:0ms; }
+.pux-qty-row .pux-qty-btn:nth-child(3) { animation-delay:55ms; }
+.pux-qty-btn:active { transform:scale(.93); }
 .pux-qty-btn.active {
   background: rgba(100,200,255,.12); border-color: rgba(100,200,255,.45); color: rgba(150,220,255,.9);
+  transform:scale(1.03);
 }
+.pux-qty-btn.active:active { transform:scale(.97); }
 
 
 .orc-itens-lista { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:14px; margin-bottom:14px; }

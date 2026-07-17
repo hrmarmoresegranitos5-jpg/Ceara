@@ -224,7 +224,7 @@ function renderOrc(wrap) {
       var c=PIV_CONFIGS[id];
       var cur=(s.pivFolhas===c.folhas&&!!s.temFixo===c.fixo&&!!s.temBandeirola===c.band);
       btns += '<button class="piv-cfg-btn'+(cur?' active':'')+'" onclick="_setPivCfg('+i+')">'
-        +'<svg id="mcad_'+id+'" class="piv-cfg-cad" viewBox="0 0 60 44" width="72" height="53"></svg>'
+        +'<svg id="mcad_'+id+'" class="piv-cfg-cad" viewBox="0 0 60 44" width="86" height="63"></svg>'
         +'<span class="piv-cfg-lbl">'+_ORC.pivLbls[i]+'</span></button>';
     });
     pivConfig = '<div class="piv-config-ttl">Configuração da porta</div>'
