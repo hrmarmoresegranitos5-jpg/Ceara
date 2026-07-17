@@ -93,7 +93,7 @@ function renderOrc(wrap) {
       var c=PIV_CONFIGS[id];
       var cur=(s.pivFolhas===c.folhas&&!!s.temFixo===c.fixo&&!!s.temBandeirola===c.band);
       btns += '<button class="piv-cfg-btn'+(cur?' active':'')+'" onclick="_setPivCfg('+i+')">'
-        +'<svg id="mcad_'+id+'" class="piv-cfg-cad" viewBox="0 0 60 44" width="60" height="44"></svg>'
+        +'<svg id="mcad_'+id+'" class="piv-cfg-cad" viewBox="0 0 60 44" width="72" height="53"></svg>'
         +'<span class="piv-cfg-lbl">'+_ORC.pivLbls[i]+'</span></button>';
     });
     pivConfig = '<div class="piv-config-ttl">Configuração da porta</div>'
@@ -147,8 +147,8 @@ function renderOrc(wrap) {
   // ── Kit pivotante + mola ──
   var kitBlock = '';
   if (isPiv) {
-    var svgC='<svg id="mkitComum" viewBox="0 0 50 50" width="44" height="44"></svg>';
-    var svgJ='<svg id="mkitJumbo" viewBox="0 0 50 50" width="44" height="44"></svg>';
+    var svgC='<svg id="mkitComum" viewBox="0 0 50 50" width="54" height="54"></svg>';
+    var svgJ='<svg id="mkitJumbo" viewBox="0 0 50 50" width="54" height="54"></svg>';
     var kitSub_c='R$ '+(nFP===2?'300':'150');
     var kitSub_j='R$ '+(nFP===2?'700':'350');
     kitBlock = '<div class="field"><label>Kit pivotante'+(nFP===2?' (2 kits)':'')+'</label>'
