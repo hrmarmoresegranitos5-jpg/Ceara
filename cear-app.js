@@ -322,6 +322,11 @@ function initApp() {
     window.addEventListener('online',  _atualizarOfflineBanner);
     window.addEventListener('offline', _atualizarOfflineBanner);
 
+
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+      });
+
     // Destino inicial: respeita atalho PWA (?pg=...) mas nunca no carregamento normal
     const urlParams = new URLSearchParams(window.location.search);
     const pgParam = urlParams.get('pg');

@@ -1109,61 +1109,9 @@ input[type=date] { color-scheme:dark; }
 .orc-item-del { background:none; border:1px solid rgba(255,60,60,.4); color:rgba(255,100,100,.8); border-radius:6px; width:26px; height:26px; font-size:.75rem; cursor:pointer; flex-shrink:0; }
 .orc-itens-total { display:flex; justify-content:space-between; padding-top:10px; font-weight:800; font-size:1rem; color:var(--t1); }
 
-/* ── Avatar cliente ── */
-.cli-avatar { width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:var(--tx);flex-shrink:0; }
-.btn-sm { padding:6px 12px;font-size:.72rem;border-radius:20px; }
-
-/* ── Status chips no histórico ── */
-.hist-status-row { display:flex;flex-wrap:wrap;gap:6px;padding:8px 0 4px; }
-.hist-status-chip { border:1px solid var(--brd);border-radius:20px;padding:4px 10px;font-size:.68rem;font-weight:700;color:var(--t3);background:transparent;cursor:pointer;transition:all .15s; }
-.hist-status-on { font-weight:800; }
-.hist-badge-status { font-size:.7rem;line-height:1; }
-
-/* ── Home stats ── */
-.hm-stats-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
-.hm-stat-card { background:var(--s2);border:var(--border);border-radius:var(--r-md);padding:12px 10px;text-align:center;cursor:pointer;transition:opacity .15s; }
-.hm-stat-card:active { opacity:.7; }
-.hm-stat-val { font-size:.95rem;font-weight:800;color:var(--gold1);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-.hm-stat-lbl { font-size:.6rem;color:var(--t4);font-weight:600;text-transform:uppercase;letter-spacing:.04em; }
-.hm-stat-warn .hm-stat-val { color:#e8a04a; }
-.hm-stat-loading { min-height:54px;position:relative;overflow:hidden; }
-.hm-stat-shimmer { position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.06) 50%,transparent 100%);background-size:200% 100%;animation:shimmer 1.4s infinite; }
-@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-.hm-ultimo-card { background:var(--s2);border:var(--border);border-radius:var(--r-md);padding:12px 14px;cursor:pointer;transition:opacity .15s; }
-.hm-ultimo-card:active { opacity:.7; }
-.hm-busca-global { display:flex;align-items:center;gap:8px;background:var(--s2);border:var(--border);border-radius:var(--r-md);padding:10px 14px; }
-.hm-busca-item { display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--s2);border:var(--border);border-radius:8px;margin-bottom:5px;cursor:pointer;transition:opacity .12s; }
-.hm-busca-item:active { opacity:.7; }
-
-/* ── Erro dimensão no orçamento ── */
-.orc-erro-dim { background:rgba(220,80,80,.1);border:1px solid rgba(220,80,80,.25);border-radius:var(--r-md);padding:12px 14px;color:rgba(220,100,100,1);font-size:.78rem;font-weight:700;text-align:center;margin-top:8px; }
-
-
+</style>
+</head>
 <body>
-
-<script>
-(function(){
-  function mostrarErro(txt){
-    var existente = document.getElementById('__debugBanner');
-    if (existente) { existente.textContent += '\n\n---\n\n' + txt; return; }
-    var d = document.createElement('div');
-    d.id = '__debugBanner';
-    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#c00;color:#fff;font-size:11px;line-height:1.5;padding:10px;white-space:pre-wrap;font-family:monospace;max-height:60vh;overflow:auto;';
-    d.textContent = txt;
-    document.body.appendChild(d);
-  }
-  window.mostrarErro = mostrarErro;
-  window.__scriptFail = function(src){
-    mostrarErro('ARQUIVO NÃO CARREGOU (404 ou bloqueado):\n' + src);
-  };
-  window.onerror = function(msg, url, line, col){
-    mostrarErro('ERRO JS:\n' + msg + '\nArquivo: ' + url + '\nLinha: ' + line + ' Coluna: ' + col);
-  };
-  window.addEventListener('unhandledrejection', function(e){
-    mostrarErro('PROMISE REJEITADA:\n' + (e.reason && e.reason.stack || e.reason));
-  });
-})();
-</script>
 
 <div id="sApp">
   <div id="pwaInstallBanner">
@@ -1198,38 +1146,23 @@ input[type=date] { color-scheme:dark; }
 <div id="modalContainer"></div>
 
 <!-- ── PDF libs ── -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <!-- ── Scripts — mesma ordem que o HR Mármores ── -->
-<script src="cear-logo.js?v=1" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
-<script src="cear-dados.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
-<script src="cear-db.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
-<script src="cear-helpers.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
-<script src="cear-home.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
-<script src="cear-cad.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
-<script src="cear-orc.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
-<script src="cear-financeiro.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
-<script src="cear-historico.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
-<script src="cear-clientes.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
-<script src="cear-config.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
-<script src="cear-modais.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
-<script src="cear-app.js?v=2" onerror="window.__scriptFail && window.__scriptFail(this.src)"></script>
-
-<script>
-(function(){
-  setTimeout(function(){
-    var sApp = document.getElementById('sApp');
-    var visivel = sApp && sApp.style.display !== 'none' && sApp.innerHTML && sApp.innerHTML.trim().length > 50;
-    var jaMostrouErro = document.getElementById('__debugBanner');
-    if (!visivel && !jaMostrouErro) {
-      var funcs = ['initApp','buildNav','renderPage','showSplash','NAV_ITEMS','LOGO_B64','renderHome','loadCFG'];
-      var status = funcs.map(function(f){ return f + ': ' + (typeof window[f] !== 'undefined' ? 'OK' : 'AUSENTE'); }).join('\n');
-      window.mostrarErro('NADA RENDERIZOU APÓS 5s.\n\nStatus das funções/variáveis principais:\n' + status + '\n\nsApp existe: ' + (!!sApp) + '\nsApp display: ' + (sApp ? sApp.style.display : 'n/a') + '\nsApp conteúdo (chars): ' + (sApp ? sApp.innerHTML.length : 'n/a'));
-    }
-  }, 5000);
-})();
-</script>
+<script src="cear-logo.js?v=1"></script>
+<script src="cear-dados.js?v=2"></script>
+<script src="cear-db.js?v=2"></script>
+<script src="cear-helpers.js?v=2"></script>
+<script src="cear-home.js?v=2"></script>
+<script src="cear-cad.js?v=2"></script>
+<script src="cear-orc.js?v=2"></script>
+<script src="cear-financeiro.js?v=2"></script>
+<script src="cear-historico.js?v=2"></script>
+<script src="cear-clientes.js?v=2"></script>
+<script src="cear-config.js?v=2"></script>
+<script src="cear-modais.js?v=2"></script>
+<script src="cear-app.js?v=2"></script>
 
 </body>
 </html>

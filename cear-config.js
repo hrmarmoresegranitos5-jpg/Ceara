@@ -218,7 +218,7 @@ function cfgSalvar() {
 function cfgResetar() {
   if (!confirm('Restaurar todos os valores para os padrões da tabela oficial?')) return;
   resetCFG();
-  const wrap = document.getElementById('mainContent');
+  const wrap = document.getElementById('pgWrap');
   if (wrap) renderConfig(wrap);
   histMostrarToast('↺ Valores padrão restaurados');
 }
