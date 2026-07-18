@@ -476,6 +476,14 @@ function _renderItens() {
   if (totalAv < total) {
     html += '<div class="orc-avista" style="margin-top:4px">💚 À vista: '+formatBRL(totalAv)+'</div>';
   }
+  if (typeof agPrevisaoTexto === 'function') {
+    var previsaoMultiStr = agPrevisaoTexto();
+    if (previsaoMultiStr) {
+      html += '<div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:.8rem;color:var(--gold2);font-weight:600">'
+        +'📅 Previsão de entrega: a partir de '+previsaoMultiStr
+        +'</div>';
+    }
+  }
   html += '<div style="display:flex;gap:8px;margin-top:12px">'
     +'<button class="btn btn-ghost btn-full" onclick="orcSalvarTodos()">💾 Salvar orçamento</button>'
     +'<button class="btn btn-grn btn-full" onclick="orcEnviarTodos()">📤 Enviar</button>'
@@ -607,7 +615,16 @@ function orcCalcAndRender() {
       var valorStr=(l.valor===0&&isFrete)?'<span style="color:var(--grn)">Grátis ✓</span>':formatBRL(l.valor);
       html+='<div class="orc-linha"><span>'+l.nome+'</span><span>'+valorStr+'</span></div>';
     });
-    html+='</div></div>';
+    html+='</div>';
+    if (typeof agPrevisaoTexto === 'function') {
+      var previsaoStr = agPrevisaoTexto();
+      if (previsaoStr) {
+        html+='<div style="display:flex;align-items:center;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.05);font-size:.8rem;color:var(--gold2);font-weight:600">'
+          +'📅 Previsão de entrega: a partir de '+previsaoStr
+          +'</div>';
+      }
+    }
+    html+='</div>';
     rb.innerHTML=html;
     var btnLabel = orcEditIdx>=0 ? '✔ Atualizar item '+(orcEditIdx+1) : '➕ Adicionar ao orçamento';
     if (ra) ra.innerHTML='<button class="btn btn-gold btn-full" style="margin-bottom:8px" onclick="orcAdicionarItem()">'+btnLabel+'</button>'

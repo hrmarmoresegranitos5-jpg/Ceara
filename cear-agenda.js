@@ -57,6 +57,20 @@ function _agComputeSchedule(list) {
   return out;
 }
 
+// ── Previsão de entrega ──
+// Calcula a próxima data útil livre na fila (dia seguinte ao fim da última
+// obra pendente). Usado no Orçamento pra mostrar uma previsão antes de salvar.
+function agPrevisaoProximaVaga() {
+  var list = _agComputeSchedule(_agLoad());
+  var pendentes = list.filter(function(o){ return o.status !== 'concluida'; });
+  if (!pendentes.length) return _agEnsureBizDay(_agGetInicioFila());
+  var ultima = pendentes[pendentes.length - 1];
+  return _agNextBizDay(ultima._fim);
+}
+function agPrevisaoTexto() {
+  try { return _agFmtDate(agPrevisaoProximaVaga()); } catch(e) { return ''; }
+}
+
 // ── Ações ──
 // Função pública: outros módulos (histórico, clientes) poderão futuramente
 // chamar agAdicionarObra(cliente, dias, obs) pra jogar uma obra na fila direto.
