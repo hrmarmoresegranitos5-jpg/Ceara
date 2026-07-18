@@ -116,6 +116,31 @@ function agSalvarNovo() {
   _agFormAberto = false;
 }
 
+// ── Prompt "agendar instalação?" — chamado logo depois de salvar um orçamento ──
+function agPromptAgendar(cliente) {
+  if (typeof showModal !== 'function') return; // cear-modais.js não carregado ainda
+  var nomeExib = cliente ? '<b>'+_esc(cliente)+'</b>' : 'este cliente';
+  showModal(
+    '<div class="modal-titulo">📅 Agendar instalação?</div>'
+    + '<div class="modal-msg">Quantos dias úteis a instalação de '+nomeExib+' deve levar?</div>'
+    + '<div class="field" style="margin:14px 0 6px;text-align:left">'
+      + '<label>Duração (dias úteis)</label>'
+      + '<input type="number" id="agPromptDias" min="1" value="1">'
+    + '</div>'
+    + '<div class="modal-row">'
+      + '<button class="btn btn-ghost btn-full" onclick="closeModal()">Agora não</button>'
+      + '<button class="btn btn-gold btn-full" id="agPromptBtn">📅 Agendar</button>'
+    + '</div>'
+  );
+  var btn = document.getElementById('agPromptBtn');
+  if (btn) btn.onclick = function(){
+    var dias = document.getElementById('agPromptDias').value;
+    agAdicionarObra(cliente||'', dias);
+    closeModal();
+    if (typeof histMostrarToast === 'function') histMostrarToast('📅 Adicionado à Agenda');
+  };
+}
+
 // ── Render principal ──
 function renderAgenda(wrap) {
   if (!wrap) return;

@@ -721,7 +721,7 @@ async function orcSalvar() {
 
 async function _orcVincularCliente(dados) {
   var nomeOrc = (dados.clienteNome||''). trim();
-  if (!nomeOrc) { await salvarOrcamento(dados); return; }
+  if (!nomeOrc) { await salvarOrcamento(dados); if (typeof agPromptAgendar === 'function') agPromptAgendar(''); return; }
   var clientes = [];
   try { clientes = await listarClientes(); } catch(e){}
   var match = clientes.find(c => c.nome.toLowerCase() === nomeOrc.toLowerCase());
@@ -736,10 +736,13 @@ async function _orcVincularCliente(dados) {
       '<button class="btn btn-gold btn-full" id="vincSimBtn">🔗 Vincular</button></div>');
     document.getElementById('vincSimBtn').onclick = async function(){
       await salvarOrcamento({...dados,clienteId:match.id,clienteNome:match.nome,clienteFone:match.fone||dados.clienteFone});
-      closeModal(); histMostrarToast('✅ Salvo e vinculado a '+match.nome);
+      if (typeof agPromptAgendar === 'function') agPromptAgendar(match.nome);
+      else { closeModal(); histMostrarToast('✅ Salvo e vinculado a '+match.nome); }
     };
     document.getElementById('vincNaoBtn').onclick = async function(){
-      await salvarOrcamento(dados); closeModal(); histMostrarToast('✅ Orçamento salvo');
+      await salvarOrcamento(dados);
+      if (typeof agPromptAgendar === 'function') agPromptAgendar(nomeOrc);
+      else { closeModal(); histMostrarToast('✅ Orçamento salvo'); }
     };
   } else {
     showModal('<div class="modal-titulo">👤 Cadastrar cliente?</div>'+
@@ -750,11 +753,14 @@ async function _orcVincularCliente(dados) {
       try {
         var novoId = await salvarCliente({nome:nomeOrc,fone:dados.clienteFone||''});
         await salvarOrcamento({...dados,clienteId:novoId});
-        closeModal(); histMostrarToast('✅ Salvo + cliente cadastrado!');
+        if (typeof agPromptAgendar === 'function') agPromptAgendar(nomeOrc);
+        else { closeModal(); histMostrarToast('✅ Salvo + cliente cadastrado!'); }
       } catch(e){ closeModal(); histMostrarToast('✅ Orçamento salvo'); }
     };
     document.getElementById('cadNaoBtn').onclick = async function(){
-      await salvarOrcamento(dados); closeModal(); histMostrarToast('✅ Orçamento salvo');
+      await salvarOrcamento(dados);
+      if (typeof agPromptAgendar === 'function') agPromptAgendar(nomeOrc);
+      else { closeModal(); histMostrarToast('✅ Orçamento salvo'); }
     };
   }
 }
@@ -764,7 +770,8 @@ async function orcSalvarTodos() {
   showModalConfirm('💾 Salvar orçamento completo?',orcItens.length+' iten'+(orcItens.length>1?'s':'')+' · '+formatBRL(totalGeral)+(orcState.cliente?' · '+orcState.cliente:''),'Salvar',async function(){
     try {
       await salvarOrcamento({tipo:'multi',clienteNome:orcState.cliente.trim(),clienteFone:orcState.fone.trim(),itens:orcItens,resultado:{total:totalGeral,totalAvista:totalGeral,linhas:[]},km:0});
-      closeModal();
+      if (typeof agPromptAgendar === 'function') agPromptAgendar(orcState.cliente.trim());
+      else closeModal();
     } catch(e){alert('Erro: '+e.message);}
   });
 }
