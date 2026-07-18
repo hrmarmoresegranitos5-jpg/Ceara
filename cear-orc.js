@@ -398,10 +398,16 @@ function renderOrc(wrap) {
   }
 
   // ── Vidro ──
-  var vidroOpts='';
-  vidrosDispo.forEach(function(v){
-    vidroOpts+='<option value="'+v.key+'"'+(s.vidroKey===v.key?' selected':'')+'>'+v.nome+' — '+formatBRL(v.preco)+'/m²</option>';
-  });
+  var vidroSelecionado = vidrosDispo.filter(function(v){return v.key===s.vidroKey;})[0] || vidrosDispo[0];
+  var vidroBtnHtml = vidroSelecionado
+    ? '<button type="button" class="vidro-select-btn" id="orcVidroBtn" onclick="orcAbrirVidroPicker()">'
+      + '<span class="vidro-select-txtwrap">'
+        + '<span class="vidro-select-nome">'+vidroSelecionado.nome+'</span>'
+        + '<span class="vidro-select-preco">'+formatBRL(vidroSelecionado.preco)+'/m²</span>'
+      + '</span>'
+      + '<span class="vidro-select-chevron">⌄</span>'
+      + '</button>'
+    : '<div class="vidro-select-btn" style="opacity:.5">Nenhum vidro disponível</div>';
 
   // ── Qtd + km ──
   var qtdKmBlock = '<div class="campo-row">'
@@ -424,7 +430,7 @@ function renderOrc(wrap) {
     + boxBlock + pivConfig + folhasBlock + janelaBlock + vidroFixacaoBlock
     + dimBlock + fixoField + bandField + suporteQtyField
     + kitBlock + kitCorBlock
-    + '<div class="field"><label>Tipo de vidro</label><select id="orcVidro" onchange="orcUpdate()">'+vidroOpts+'</select></div>'
+    + '<div class="field"><label>Tipo de vidro</label>'+vidroBtnHtml+'</div>'
     + accsBlock
     + qtdKmBlock
     + '<div id="orcResultBox"></div>'
@@ -619,7 +625,6 @@ function orcUpdate() {
   _orcTouched = true;
   s.larg    = parseFloat(document.getElementById('orcLarg')?.value)||0;
   s.alt     = parseFloat(document.getElementById('orcAlt')?.value)||0;
-  s.vidroKey= document.getElementById('orcVidro')?.value||s.vidroKey;
   s.km      = parseFloat(document.getElementById('orcKm')?.value)||0;
   s.cliente = document.getElementById('orcCliente')?.value||'';
   s.fone    = document.getElementById('orcFone')?.value||'';
@@ -636,6 +641,62 @@ function orcUpdate() {
 }
 
 // ── Helpers ───────────────────────────────────────────────────
+function orcAbrirVidroPicker() {
+  var s = orcState;
+  var vidrosChaves = (VIDROS_POR_TIPO[s.tipo]||[]);
+  if (!vidrosChaves.length && s.tipo==='vidro_fixo') vidrosChaves = Object.keys(CFG.vidros||{});
+  var vidrosDispo = vidrosChaves.map(function(k){ return {key:k, nome:CFG.vidros[k].nome, preco:CFG.vidros[k].preco}; });
+  var rows = '';
+  vidrosDispo.forEach(function(v){
+    var ativo = s.vidroKey===v.key;
+    rows += '<button type="button" class="vidro-picker-row'+(ativo?' active':'')+'" onclick="orcEscolherVidro(\''+v.key+'\')">'
+      + '<span class="vidro-picker-radio'+(ativo?' on':'')+'"></span>'
+      + '<span class="vidro-picker-info">'
+        + '<span class="vidro-picker-nome">'+v.nome+'</span>'
+        + '<span class="vidro-picker-preco">'+formatBRL(v.preco)+'/m²</span>'
+      + '</span>'
+      + (ativo?'<span class="vidro-picker-check">✓</span>':'')
+      + '</button>';
+  });
+  _orcOpenSheet(
+    '<div class="vidro-sheet-handle"></div>'
+    + '<div class="vidro-sheet-ttl">🪟 Tipo de vidro</div>'
+    + '<div class="vidro-sheet-sub">Escolha o vidro para este item</div>'
+    + '<div class="vidro-picker-list">'+rows+'</div>'
+  );
+}
+function orcEscolherVidro(key) {
+  orcState.vidroKey = key;
+  _orcCloseSheet();
+  _orcTouched = true;
+  var btn = document.getElementById('orcVidroBtn');
+  if (btn) {
+    var v = CFG.vidros[key];
+    if (v) btn.innerHTML = '<span class="vidro-select-txtwrap"><span class="vidro-select-nome">'+v.nome+'</span><span class="vidro-select-preco">'+formatBRL(v.preco)+'/m²</span></span><span class="vidro-select-chevron">⌄</span>';
+  }
+  _orcRefreshCAD();
+  orcCalcAndRender();
+}
+function _orcOpenSheet(innerHtml) {
+  var ov = document.getElementById('orcSheetOverlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'orcSheetOverlay';
+    ov.className = 'vidro-sheet-overlay';
+    ov.addEventListener('click', function(e){ if (e.target===ov) _orcCloseSheet(); });
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = '<div class="vidro-sheet">'+innerHtml+'</div>';
+  requestAnimationFrame(function(){ ov.classList.add('open'); });
+  document.body.style.overflow = 'hidden';
+}
+function _orcCloseSheet() {
+  var ov = document.getElementById('orcSheetOverlay');
+  if (!ov) return;
+  ov.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(function(){ if (ov && !ov.classList.contains('open')) ov.innerHTML=''; }, 220);
+}
 function _getVisAcc() {
   var s=orcState, isPiv=s.tipo==='pivotante';
   var a=CFG.acessorios||{};

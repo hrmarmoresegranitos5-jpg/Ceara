@@ -290,7 +290,7 @@ body { font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'SF Pro Display
 /* ── Orçamento: aumento geral de fonte e área de toque (só nesta tela) ── */
 #pgOrcamento .field label { font-size:1.15rem;margin-bottom:11px; }
 #pgOrcamento .section-ttl { font-size:.88rem;letter-spacing:.09em;margin-bottom:15px; }
-#pgOrcamento input[type=text],#pgOrcamento input[type=number],#pgOrcamento input[type=tel],#pgOrcamento select {
+#pgOrcamento input[type=text],#pgOrcamento input[type=number],#pgOrcamento input[type=tel],#pgOrcamento select,#pgOrcamento .vidro-select-btn {
   font-size:1.32rem;padding:21px 22px;
 }
 #pgOrcamento .piv-config-ttl { font-size:1.15rem;margin:19px 0 14px; }
@@ -327,6 +327,66 @@ input[type=text],input[type=number],input[type=email],input[type=tel],input[type
 input:focus,select:focus,textarea:focus { border-color:rgba(212,175,55,0.4);box-shadow:0 0 0 3px rgba(212,175,55,0.08); }
 ::placeholder { color:var(--t4); }
 input[type=date] { color-scheme:dark; }
+
+/* ── Seletor de vidro (botão custom + folha) ── */
+.vidro-select-btn {
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--s3);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r-sm);
+  padding:15px 16px;font-family:inherit;color:var(--tx);cursor:pointer;text-align:left;
+  transition:border-color 150ms ease,box-shadow 150ms ease,transform 120ms ease;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.vidro-select-btn:active { transform:scale(.98); }
+.vidro-select-btn:focus-visible { border-color:rgba(212,175,55,0.4);box-shadow:0 0 0 3px rgba(212,175,55,0.08); }
+.vidro-select-txtwrap { display:flex;flex-direction:column;gap:2px;min-width:0; }
+.vidro-select-nome { font-weight:700;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.vidro-select-preco { font-size:.78em;color:var(--gold2);font-weight:600; }
+.vidro-select-chevron { flex-shrink:0;color:var(--t3);font-size:1.2em;line-height:1; }
+
+.vidro-sheet-overlay {
+  position:fixed;inset:0;background:rgba(6,6,12,0);z-index:900;
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 220ms ease,background 220ms ease;
+}
+.vidro-sheet-overlay.open { opacity:1;pointer-events:auto;background:rgba(6,6,12,0.6); }
+.vidro-sheet {
+  width:100%;max-width:520px;max-height:78vh;overflow-y:auto;
+  background:linear-gradient(160deg,var(--s2),var(--s1));
+  border:1px solid rgba(255,255,255,0.08);border-bottom:none;
+  border-radius:22px 22px 0 0;padding:10px 18px calc(20px + env(safe-area-inset-bottom,0px));
+  transform:translateY(100%);transition:transform 260ms cubic-bezier(.32,.72,0,1);
+  box-shadow:0 -12px 40px rgba(0,0,0,0.4);
+}
+.vidro-sheet-overlay.open .vidro-sheet { transform:translateY(0); }
+.vidro-sheet-handle { width:38px;height:4px;border-radius:3px;background:rgba(255,255,255,0.15);margin:6px auto 14px; }
+.vidro-sheet-ttl { font-size:1.05rem;font-weight:800;color:var(--tx);text-align:center; }
+.vidro-sheet-sub { font-size:.82rem;color:var(--t3);text-align:center;margin-top:3px;margin-bottom:16px; }
+
+.vidro-picker-list { display:flex;flex-direction:column;gap:8px; }
+.vidro-picker-row {
+  width:100%;display:flex;align-items:center;gap:12px;
+  background:var(--s3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);
+  padding:14px 15px;font-family:inherit;color:var(--tx);cursor:pointer;text-align:left;
+  transition:background 130ms ease,border-color 130ms ease,transform 120ms ease;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.vidro-picker-row:active { transform:scale(.98); }
+.vidro-picker-row.active { background:var(--gold3);border-color:rgba(212,175,55,0.4); }
+.vidro-picker-radio {
+  flex-shrink:0;width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);
+  position:relative;
+}
+.vidro-picker-radio.on { border-color:var(--gold); }
+.vidro-picker-radio.on::after {
+  content:'';position:absolute;inset:3px;border-radius:50%;background:var(--gold);
+}
+.vidro-picker-info { flex:1;min-width:0;display:flex;flex-direction:column;gap:2px; }
+.vidro-picker-nome { font-weight:700;color:var(--tx);font-size:.96rem; }
+.vidro-picker-preco { font-size:.82rem;color:var(--gold2);font-weight:600; }
+.vidro-picker-check { flex-shrink:0;color:var(--gold);font-weight:800;font-size:1.05rem; }
+#pgOrcamento .vidro-sheet-ttl { font-size:1.2rem; }
+#pgOrcamento .vidro-picker-nome { font-size:1.08rem; }
+#pgOrcamento .vidro-picker-preco { font-size:.92rem; }
 
 /* ── Orçamento page ── */
 .orc-tipos { display:flex;overflow-x:auto;gap:8px;padding-bottom:8px;margin-bottom:18px;scrollbar-width:none; }
@@ -1395,16 +1455,20 @@ button.orc-crumb-step:active { transform:scale(.96); }
   animation:springIn 280ms cubic-bezier(.34,1.56,.64,1) both;
 }
 .ag-card.is-atual { border-color:rgba(80,220,140,.4);box-shadow:0 0 0 1px rgba(80,220,140,.15) inset; }
-.ag-card-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:8px; }
+.ag-card-top { display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px; }
 .ag-card-num { font-size:.75rem;font-weight:700;color:var(--t4); }
 .ag-card-badge {
   font-size:.65rem;font-weight:700;color:rgba(100,230,160,1);
   background:rgba(60,200,130,.12);border:1px solid rgba(80,220,140,.3);
   border-radius:20px;padding:3px 9px;
 }
+.ag-card-badge-vidro {
+  color:var(--gold2);background:var(--gold4);border:1px solid rgba(212,175,110,.35);
+}
 .ag-card-cliente { font-size:1.05rem;font-weight:700;color:var(--tx); }
 .ag-card-obs { font-size:.82rem;color:var(--t3);margin-top:3px; }
 .ag-card-datas { font-size:.9rem;font-weight:600;color:var(--gold2);margin-top:8px; }
+.ag-card-vidro { font-size:.8rem;color:var(--t3);margin-top:4px; }
 .ag-card-row { display:flex;align-items:center;gap:10px;margin-top:10px; }
 .ag-card-dias-lbl { font-size:.78rem;color:var(--t3); }
 .ag-card-dias { width:64px;padding:8px 10px;font-size:.9rem;border-radius:8px;background:var(--s3);border:1px solid rgba(255,255,255,.08);color:var(--tx);font-family:inherit; }
@@ -1493,8 +1557,8 @@ button.orc-crumb-step:active { transform:scale(.96); }
 <script src="cear-helpers.js?v=3"></script>
 <script src="cear-home.js?v=3"></script>
 <script src="cear-cad.js?v=2"></script>
-<script src="cear-orc.js?v=7"></script>
-<script src="cear-agenda.js?v=3"></script>
+<script src="cear-orc.js?v=8"></script>
+<script src="cear-agenda.js?v=4"></script>
 <script src="cear-financeiro.js?v=2"></script>
 <script src="cear-historico.js?v=2"></script>
 <script src="cear-clientes.js?v=2"></script>
