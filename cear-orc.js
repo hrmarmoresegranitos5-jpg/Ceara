@@ -782,7 +782,11 @@ async function orcSalvar() {
 
 async function _orcVincularCliente(dados) {
   var nomeOrc = (dados.clienteNome||''). trim();
-  if (!nomeOrc) { await salvarOrcamento(dados); if (typeof agPromptAgendar === 'function') agPromptAgendar(''); return; }
+  if (!nomeOrc) {
+    var idSemNome = await salvarOrcamento(dados);
+    if (typeof agPromptAgendar === 'function') agPromptAgendar('', idSemNome);
+    return;
+  }
   var clientes = [];
   try { clientes = await listarClientes(); } catch(e){}
   var match = clientes.find(c => c.nome.toLowerCase() === nomeOrc.toLowerCase());
@@ -796,13 +800,13 @@ async function _orcVincularCliente(dados) {
       '<div class="modal-row"><button class="btn btn-ghost btn-full" id="vincNaoBtn">Não vincular</button>'+
       '<button class="btn btn-gold btn-full" id="vincSimBtn">🔗 Vincular</button></div>');
     document.getElementById('vincSimBtn').onclick = async function(){
-      await salvarOrcamento({...dados,clienteId:match.id,clienteNome:match.nome,clienteFone:match.fone||dados.clienteFone});
-      if (typeof agPromptAgendar === 'function') agPromptAgendar(match.nome);
+      var idVinc = await salvarOrcamento({...dados,clienteId:match.id,clienteNome:match.nome,clienteFone:match.fone||dados.clienteFone});
+      if (typeof agPromptAgendar === 'function') agPromptAgendar(match.nome, idVinc);
       else { closeModal(); histMostrarToast('✅ Salvo e vinculado a '+match.nome); }
     };
     document.getElementById('vincNaoBtn').onclick = async function(){
-      await salvarOrcamento(dados);
-      if (typeof agPromptAgendar === 'function') agPromptAgendar(nomeOrc);
+      var idNaoVinc = await salvarOrcamento(dados);
+      if (typeof agPromptAgendar === 'function') agPromptAgendar(nomeOrc, idNaoVinc);
       else { closeModal(); histMostrarToast('✅ Orçamento salvo'); }
     };
   } else {
@@ -813,14 +817,14 @@ async function _orcVincularCliente(dados) {
     document.getElementById('cadSimBtn').onclick = async function(){
       try {
         var novoId = await salvarCliente({nome:nomeOrc,fone:dados.clienteFone||''});
-        await salvarOrcamento({...dados,clienteId:novoId});
-        if (typeof agPromptAgendar === 'function') agPromptAgendar(nomeOrc);
+        var idCad = await salvarOrcamento({...dados,clienteId:novoId});
+        if (typeof agPromptAgendar === 'function') agPromptAgendar(nomeOrc, idCad);
         else { closeModal(); histMostrarToast('✅ Salvo + cliente cadastrado!'); }
       } catch(e){ closeModal(); histMostrarToast('✅ Orçamento salvo'); }
     };
     document.getElementById('cadNaoBtn').onclick = async function(){
-      await salvarOrcamento(dados);
-      if (typeof agPromptAgendar === 'function') agPromptAgendar(nomeOrc);
+      var idSemCad = await salvarOrcamento(dados);
+      if (typeof agPromptAgendar === 'function') agPromptAgendar(nomeOrc, idSemCad);
       else { closeModal(); histMostrarToast('✅ Orçamento salvo'); }
     };
   }
@@ -830,8 +834,8 @@ async function orcSalvarTodos() {
   var totalGeral=orcItens.reduce(function(a,it){return a+(it.resultado.total||0)*(it.qty||1);},0);
   showModalConfirm('💾 Salvar orçamento completo?',orcItens.length+' iten'+(orcItens.length>1?'s':'')+' · '+formatBRL(totalGeral)+(orcState.cliente?' · '+orcState.cliente:''),'Salvar',async function(){
     try {
-      await salvarOrcamento({tipo:'multi',clienteNome:orcState.cliente.trim(),clienteFone:orcState.fone.trim(),itens:orcItens,resultado:{total:totalGeral,totalAvista:totalGeral,linhas:[]},km:0});
-      if (typeof agPromptAgendar === 'function') agPromptAgendar(orcState.cliente.trim());
+      var idMulti = await salvarOrcamento({tipo:'multi',clienteNome:orcState.cliente.trim(),clienteFone:orcState.fone.trim(),itens:orcItens,resultado:{total:totalGeral,totalAvista:totalGeral,linhas:[]},km:0});
+      if (typeof agPromptAgendar === 'function') agPromptAgendar(orcState.cliente.trim(), idMulti);
       else closeModal();
     } catch(e){alert('Erro: '+e.message);}
   });

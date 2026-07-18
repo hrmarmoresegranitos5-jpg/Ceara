@@ -185,12 +185,24 @@ async function histSetStatus(id, novoStatus) {
   const orc = histState.orcamentos.find(o => o.id === id);
   if (!orc) return;
   try {
+    const statusAnterior = orc.status || 'pendente';
     const atualizado = { ...orc, status: novoStatus };
     await atualizarOrcamento(atualizado);
     const idx = histState.orcamentos.findIndex(o => o.id === id);
     if (idx >= 0) histState.orcamentos[idx] = atualizado;
     histRenderLista();
     histMostrarToast('✅ Status atualizado: ' + novoStatus);
+
+    // Aprovação gera conta a receber automaticamente e oferece agendar a
+    // instalação — ambos linkados pelo ID do orçamento, sem duplicar.
+    if (novoStatus === 'aprovado' && statusAnterior !== 'aprovado') {
+      try {
+        if (typeof gerarContaDeOrcamento === 'function') await gerarContaDeOrcamento(atualizado);
+      } catch(e) { /* não bloqueia o fluxo se o financeiro falhar */ }
+      if (typeof agPromptAgendar === 'function') {
+        setTimeout(() => agPromptAgendar(atualizado.clienteNome || '', atualizado.id), 300);
+      }
+    }
   } catch(e) { histMostrarToast('❌ Erro ao atualizar status'); }
 }
 

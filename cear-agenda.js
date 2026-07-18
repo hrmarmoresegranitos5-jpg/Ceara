@@ -60,11 +60,17 @@ function _agComputeSchedule(list) {
 // ── Ações ──
 // Função pública: outros módulos (histórico, clientes) poderão futuramente
 // chamar agAdicionarObra(cliente, dias, obs) pra jogar uma obra na fila direto.
-function agAdicionarObra(cliente, dias, obs) {
+function agAdicionarObra(cliente, dias, obs, orcamentoId) {
   var list = _agLoad();
-  list.push({ id:_agId(), cliente:(cliente||'').trim(), dias:parseInt(dias)||1, obs:(obs||'').trim(), status:'pendente', criadoEm:Date.now() });
+  list.push({ id:_agId(), cliente:(cliente||'').trim(), dias:parseInt(dias)||1, obs:(obs||'').trim(), status:'pendente', criadoEm:Date.now(), orcamentoId:orcamentoId||null });
   _agSave(list);
   if (document.getElementById('pgAgenda')) renderAgenda(document.getElementById('pgWrap'));
+}
+// Um orçamento só deve gerar uma obra na fila — usado pra não duplicar
+// agendamento quando o mesmo orçamento é aprovado mais de uma vez.
+function agExisteParaOrcamento(orcamentoId) {
+  if (!orcamentoId) return false;
+  return _agLoad().some(function(o){ return o.orcamentoId === orcamentoId; });
 }
 function agMover(id, dir) {
   var list = _agLoad();
@@ -117,8 +123,10 @@ function agSalvarNovo() {
 }
 
 // ── Prompt "agendar instalação?" — chamado logo depois de salvar um orçamento ──
-function agPromptAgendar(cliente) {
+function agPromptAgendar(cliente, orcamentoId) {
   if (typeof showModal !== 'function') return; // cear-modais.js não carregado ainda
+  // Já existe uma obra na fila pra esse orçamento — não oferece duplicar.
+  if (orcamentoId && agExisteParaOrcamento(orcamentoId)) return;
   var nomeExib = cliente ? '<b>'+_esc(cliente)+'</b>' : 'este cliente';
   showModal(
     '<div class="modal-titulo">📅 Agendar instalação?</div>'
@@ -135,7 +143,7 @@ function agPromptAgendar(cliente) {
   var btn = document.getElementById('agPromptBtn');
   if (btn) btn.onclick = function(){
     var dias = document.getElementById('agPromptDias').value;
-    agAdicionarObra(cliente||'', dias);
+    agAdicionarObra(cliente||'', dias, '', orcamentoId);
     closeModal();
     if (typeof histMostrarToast === 'function') histMostrarToast('📅 Adicionado à Agenda');
   };
